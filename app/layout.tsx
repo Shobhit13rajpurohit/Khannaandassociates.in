@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -47,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon */}
         <link rel="icon" href="/placeholder.svg?height=32&width=32" />
@@ -117,7 +117,7 @@ export default function RootLayout({
                 "https://www.linkedin.com/company/khanna-and-associates",
                 "https://twitter.com/khannaassociates",
               ],
-              priceRange: "$$",
+              priceRange: "$",
               servesCuisine: "Legal Services",
               foundingDate: "1948",
               areaServed: ["Delhi", "Jaipur", "Dehradun", "Mumbai", "Bangalore", "Gurgaon", "New York", "London"],
@@ -161,7 +161,13 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="light" 
+          enableSystem 
+          disableTransitionOnChange
+          suppressHydrationWarning
+        >
           <Header />
           <main>{children}</main>
           <Footer />

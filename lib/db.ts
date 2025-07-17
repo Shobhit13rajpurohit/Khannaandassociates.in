@@ -1,4 +1,4 @@
-import { supabase } from "./supabase-server"
+import { supabase } from "./supabase"
 
 // Database types
 export interface Service {

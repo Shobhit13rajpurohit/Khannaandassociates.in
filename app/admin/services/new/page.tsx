@@ -30,34 +30,36 @@ export default function NewServicePage() {
   const [newKeyPoint, setNewKeyPoint] = useState("")
   const [newRelatedService, setNewRelatedService] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const token = localStorage.getItem("admin_token")
-      const response = await fetch("/api/admin/services", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      })
+  try {
+    const token = localStorage.getItem("admin_token");
+    const response = await fetch("/api/admin/services", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
 
-      if (!response.ok) {
-        throw new Error("Failed to create service")
-      }
-
-      const service = await response.json()
-      router.push(`/admin/services`)
-    } catch (error) {
-      console.error("Error creating service:", error)
-      alert("Failed to create service")
-    } finally {
-      setLoading(false)
+    if (!response.ok) {
+      const errorData = await response.json(); // Try to get error details from the response
+      console.error("API Error:", response.status, errorData);
+      throw new Error(`Failed to create service: ${response.status} ${response.statusText}`);
     }
+
+    const service = await response.json();
+    router.push(`/admin/services`);
+  } catch (error) {
+    console.error("Error creating service:", error);
+    alert(`Failed to create service: ${error.message}`);
+  } finally {
+    setLoading(false);
   }
+};
 
   const generateSlug = (title: string) => {
     return title

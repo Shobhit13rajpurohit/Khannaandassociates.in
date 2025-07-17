@@ -1,14 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
@@ -16,14 +15,36 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     // Check if already logged in
-    const token = localStorage.getItem("adminAuthToken")
-    if (token) {
-      router.push("/admin/dashboard")
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/check', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache',
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.user) {
+            router.push("/admin/dashboard")
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Auth check error:', error)
+      } finally {
+        setIsCheckingAuth(false)
+      }
     }
+
+    checkAuth()
   }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -31,25 +52,60 @@ export default function AdminLoginPage() {
     setError("")
     setIsLoading(true)
 
-    try {
-      // In a real application, this would be an API call to your authentication endpoint
-      // For demo purposes, we'll use a simple check
-      if (email === "admin@khannaandassociates.com" && password === "admin123") {
-        // Set a session cookie or token in localStorage
-        localStorage.setItem("adminAuthToken", "demo-token-123")
-        localStorage.setItem("adminUserEmail", email)
+    // Basic validation
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password")
+      setIsLoading(false)
+      return
+    }
 
-        // Redirect to admin dashboard
-        router.push("/admin/dashboard")
+    if (!email.includes('@')) {
+      setError("Please enter a valid email address")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          password: password.trim() 
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.user) {
+        // Small delay to show success state
+        setTimeout(() => {
+          router.push("/admin/dashboard")
+        }, 500)
       } else {
-        setError("Invalid email or password")
+        setError(data.error || "Invalid email or password")
       }
     } catch (err) {
-      setError("An error occurred during login. Please try again.")
-      console.error(err)
+      console.error('Login error:', err)
+      setError("Network error. Please check your connection and try again.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show loading spinner while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#1a3c61]" />
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -62,15 +118,31 @@ export default function AdminLoginPage() {
             width={200}
             height={60}
             className="mb-4 bg-white p-2 rounded"
+            priority
           />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-[#1a3c61]">Admin Login</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">Sign in to access the website management system</p>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-[#1a3c61]">
+          Admin Login
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Sign in to access the website management system
+        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+              <span className="block sm:inline">{error}</span>
+              <button
+                onClick={() => setError("")}
+                className="absolute top-0 bottom-0 right-0 px-4 py-3"
+              >
+                <span className="sr-only">Dismiss</span>
+                ×
+              </button>
+            </div>
+          )}
 
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
@@ -90,7 +162,8 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
-                  placeholder="admin@khannaandassociates.com"
+                  placeholder="Enter your email"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -113,12 +186,14 @@ export default function AdminLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10"
                   placeholder="••••••••"
+                  disabled={isLoading}
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -133,6 +208,7 @@ export default function AdminLoginPage() {
                   name="remember_me"
                   type="checkbox"
                   className="h-4 w-4 text-[#4BB4E6] focus:ring-[#4BB4E6] border-gray-300 rounded"
+                  disabled={isLoading}
                 />
                 <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-700">
                   Remember me
@@ -140,34 +216,36 @@ export default function AdminLoginPage() {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-[#4BB4E6] hover:text-[#3a9fd1]">
+                <a 
+                  href="#" 
+                  className="font-medium text-[#4BB4E6] hover:text-[#3a9fd1]"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    // Handle forgot password logic here
+                  }}
+                >
                   Forgot your password?
                 </a>
               </div>
             </div>
 
             <div>
-              <Button type="submit" className="w-full bg-[#1a3c61] hover:bg-[#132e4a] text-white" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
+              <Button 
+                type="submit" 
+                className="w-full bg-[#1a3c61] hover:bg-[#132e4a] text-white" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
               </Button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo credentials</span>
-              </div>
-            </div>
-
-            <div className="mt-4 text-center text-xs text-gray-500">
-              <p>Email: admin@khannaandassociates.com</p>
-              <p>Password: admin123</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
