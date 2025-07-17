@@ -1,13 +1,7 @@
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "./supabase-server"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { type NextRequest, NextResponse } from "next/server"
-
-const supabaseUrl = "https://xszkyrwopyftlqtstysh.supabase.co"
-const supabaseKey = process.env.SUPABASE_KEY!
-const jwtSecret = process.env.JWT_SECRET!
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
