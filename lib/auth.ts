@@ -15,7 +15,7 @@ export async function signIn(email: string, password: string) {
   }
 
   if (data.session) {
-    cookies().set("supabase-auth-token", data.session.access_token, {
+    await cookies().set("supabase-auth-token", data.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -28,13 +28,14 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
-  cookies().delete("supabase-auth-token")
+  await cookies().delete("supabase-auth-token")
   await supabase.auth.signOut()
   redirect("/blog/login")
 }
 
 export async function getSession() {
-  const token = cookies().get("supabase-auth-token")?.value
+  const cookieStore = cookies()
+  const token = cookieStore.get("supabase-auth-token")?.value
   if (!token) return null
 
   const { data, error } = await supabase.auth.getUser(token)
