@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS media (
 -- Insert default admin user (password: admin123)
 -- The password hash is for 'admin123'
 INSERT INTO admin_users (email, password_hash, name, role)
-VALUES ('admin@khannaandassociates.com', '$2b$10$rOzJqQqQqQqQqQqQqQqQqOzJqQqQqQqQqQqQqQqQqOzJqQqQqQqQq', 'Admin User', 'admin')
+VALUES ('admin@khannaandassociates.com', 'Admin123', 'Admin User', 'admin')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert sample services
