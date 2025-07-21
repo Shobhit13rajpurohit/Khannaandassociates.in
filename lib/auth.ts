@@ -11,12 +11,12 @@ export interface AdminUser {
 }
 
 // Sign in function
-export async function signIn(email: string, password: string): Promise<AdminUser> {
+export async function signIn(email: string, password: string): Promise<{ user: User; session: Session; adminData: { role: string; created_at: string; } }> {
   try {
     // First check if user exists in admin_users table
     const { data: adminUser, error: adminError } = await supabaseAdmin
       .from('admin_users')
-      .select('*')
+      .select('role, created_at')
       .eq('email', email)
       .single()
 
@@ -30,60 +30,37 @@ export async function signIn(email: string, password: string): Promise<AdminUser
       password
     })
 
-    if (error) {
+    if (error || !data.user || !data.session) {
       throw new Error('Invalid email or password')
     }
 
-    if (!data.user) {
-      throw new Error('Authentication failed')
-    }
-
-    // Set session cookie
-    const cookieStore = cookies()
-    cookieStore.set('sb-access-token', data.session.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
-    })
-
-    cookieStore.set('sb-refresh-token', data.session.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30 // 30 days
-    })
-
-    return {
-      id: data.user.id,
-      email: data.user.email!,
-      role: adminUser.role,
-      created_at: adminUser.created_at
+    // IMPORTANT: Return the user, session, and admin data instead of setting cookies here.
+    return { 
+      user: data.user, 
+      session: data.session,
+      adminData: {
+        role: adminUser.role,
+        created_at: adminUser.created_at
+      }
     }
   } catch (error) {
     console.error('Sign in error:', error)
-    throw error
+    throw error // Re-throw the error to be caught by the API route
   }
 }
-
-// Get current admin user
-export async function getAdminUser(): Promise<AdminUser | null> {
+// Get current admin user by validating the access token
+export async function getAdminUser(accessToken: string | undefined): Promise<AdminUser | null> {
   try {
-    const cookieStore = cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value
-    
     if (!accessToken) {
       return null
     }
 
-    // Get user from Supabase with the access token
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken)
 
-    if (error || !user) {
+    if (error || !user || !user.email) {
       return null
     }
 
-    // Get admin user details
     const { data: adminUser, error: adminError } = await supabaseAdmin
       .from('admin_users')
       .select('*')
@@ -96,7 +73,7 @@ export async function getAdminUser(): Promise<AdminUser | null> {
 
     return {
       id: user.id,
-      email: user.email!,
+      email: user.email,
       role: adminUser.role,
       created_at: adminUser.created_at
     }
