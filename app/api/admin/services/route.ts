@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server"
 import { getServices, createService } from "@/lib/db"
-import { getAdminUser } from "@/lib/auth"
 
 export async function GET() {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const services = await getServices()
     return NextResponse.json(services)
   } catch (error) {
@@ -19,11 +13,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const serviceData = await request.json()
     const newService = await createService(serviceData)
     if (!newService) {

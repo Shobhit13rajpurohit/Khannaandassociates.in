@@ -1,30 +1,27 @@
 import { NextResponse } from "next/server"
-import { uploadMedia } from "@/lib/db"
-import { getAdminUser } from "@/lib/auth"
+import { getBlogPosts, createBlogPost } from "@/lib/db"
+
+export async function GET() {
+  try {
+    const posts = await getBlogPosts()
+    return NextResponse.json(posts)
+  } catch (error) {
+    console.error("API Error fetching blog posts:", error)
+    return NextResponse.json({ message: "Error fetching blog posts" }, { status: 500 })
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    const postData = await request.json()
+    // Ensure author_id is set to a default value
+    const newPost = await createBlogPost({ ...postData, author_id: "admin" })
+    if (!newPost) {
+      throw new Error("Failed to create blog post")
     }
-
-    const formData = await request.formData()
-    const file = formData.get("file") as File
-
-    if (!file) {
-      return NextResponse.json({ message: "No file uploaded" }, { status: 400 })
-    }
-
-    const mediaItem = await uploadMedia(file)
-
-    if (!mediaItem) {
-      throw new Error("Failed to upload media")
-    }
-
-    return NextResponse.json(mediaItem, { status: 201 })
+    return NextResponse.json(newPost, { status: 201 })
   } catch (error) {
-    console.error("API Error uploading media:", error)
-    return NextResponse.json({ message: "Error uploading media" }, { status: 500 })
+    console.error("API Error creating blog post:", error)
+    return NextResponse.json({ message: "Error creating blog post" }, { status: 500 })
   }
 }

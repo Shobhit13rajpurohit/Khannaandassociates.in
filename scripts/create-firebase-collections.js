@@ -1,13 +1,39 @@
-const admin = require('firebase-admin');
-const serviceAccount = require('../.env.local'); // This will not work, but it's a placeholder
+// 1. Load environment variables from your .env.local file first
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
 
+// 2. Require the firebase-admin library
+const admin = require('firebase-admin');
+
+// 3. Build the service account object using the environment variables
+// This object needs to be defined BEFORE you initialize the app
+const serviceAccount = {
+  type: "service_account",
+  project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID, // Add this to your .env.local if available
+  private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID, // Add this to your .env.local if available
+  auth_uri: "https://accounts.google.com/o/oauth2/auth",
+  token_uri: "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${process.env.FIREBASE_CLIENT_EMAIL}`
+};
+
+// 4. Initialize the Firebase Admin SDK with the credentials
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
+// 5. Get a reference to the Firestore database
 const db = admin.firestore();
 
+/**
+ * An asynchronous function to create initial collections and documents in Firestore.
+ */
 async function createCollections() {
+  console.log("Starting to create collections...");
+
   // Create admin_users collection
   const adminUsersRef = db.collection('admin_users');
   await adminUsersRef.doc('admin-user-id').set({
@@ -16,6 +42,7 @@ async function createCollections() {
     role: 'admin',
     created_at: new Date(),
   });
+  console.log("-> 'admin_users' collection created.");
 
   // Create services collection
   const servicesRef = db.collection('services');
@@ -49,6 +76,7 @@ async function createCollections() {
     created_at: new Date(),
     updated_at: new Date(),
   });
+  console.log("-> 'services' collection populated.");
 
   // Create blog_posts collection
   const blogPostsRef = db.collection('blog_posts');
@@ -64,6 +92,7 @@ async function createCollections() {
     created_at: new Date(),
     updated_at: new Date(),
   });
+  console.log("-> 'blog_posts' collection created.");
 
   // Create media collection
   const mediaRef = db.collection('media');
@@ -76,8 +105,13 @@ async function createCollections() {
     alt_text: 'Sample Image',
     created_at: new Date(),
   });
+  console.log("-> 'media' collection created.");
 
-  console.log('Collections created successfully');
+
+  console.log('✅ Collections created successfully!');
 }
 
-createCollections().catch(console.error);
+// Execute the function and catch any potential errors
+createCollections().catch(error => {
+    console.error("❌ An error occurred while creating collections:", error);
+});
