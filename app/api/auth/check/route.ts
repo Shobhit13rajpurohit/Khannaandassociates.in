@@ -4,16 +4,14 @@ import { cookies } from "next/headers"
 
 export async function GET() {
   try {
-    // 1. Read the access token directly in the route handler.
     const cookieStore = cookies()
-    const accessToken = cookieStore.get('sb-access-token')?.value
+    const accessToken = cookieStore.get('fb-access-token')?.value
 
-    // 2. Pass the token to the helper function.
     const user = await getAdminUser(accessToken)
-    
+
     if (user) {
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         user: {
           id: user.id,
           email: user.email,

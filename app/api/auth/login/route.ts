@@ -1,12 +1,6 @@
-// app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import bcrypt from 'bcryptjs';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_KEY! // Service role key for admin operations
-);
+import { signIn } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,49 +15,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get admin user from database
-    const { data: adminUser, error: fetchError } = await supabase
-      .from('admin_users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    const { user, adminData } = await signIn(email, password);
+    const idToken = await user.getIdToken();
 
-    if (fetchError || !adminUser) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, adminUser.password_hash);
-
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Create session token (you might want to use JWT here)
-    const sessionData = {
-      id: adminUser.id,
-      email: adminUser.email,
-      name: adminUser.name,
-      role: adminUser.role
-    };
+    // Set cookie
+    const cookieStore = cookies();
+    cookieStore.set('fb-access-token', idToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: '/',
+    });
 
     return NextResponse.json({
       success: true,
-      user: sessionData,
-      message: 'Login successful'
+      user: {
+        id: user.uid,
+        email: user.email,
+        role: adminData.role,
+      },
+      message: 'Login successful',
     });
-
   } catch (error) {
     console.error('Login API Error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: 'Invalid credentials' },
+      { status: 401 }
     );
   }
 }
