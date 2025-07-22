@@ -136,7 +136,7 @@ export default function AdminDashboard() {
           <Link href="/admin/pages/edit?id=home">
             <Button className="bg-[#1a3c61]">Edit Home Page</Button>
           </Link>
-          <Link href="/admin/blog/new">
+          <Link href="/blog/admin">
             <Button className="bg-[#1a3c61]">Create Blog Post</Button>
           </Link>
           <Link href="/admin/services/new">
