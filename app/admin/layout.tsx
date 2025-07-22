@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LogOut, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -14,51 +14,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const router = useRouter()
   const pathname = usePathname()
-
-  useEffect(() => {
-    // Skip auth check for login page
-    if (pathname === "/admin") {
-      setIsLoading(false)
-      return
-    }
-
-    // Check if user is authenticated
-    const token = localStorage.getItem("adminAuthToken")
-    if (!token) {
-      router.push("/admin")
-    } else {
-      setIsAuthenticated(true)
-    }
-    setIsLoading(false)
-  }, [router, pathname])
-
-  const handleLogout = () => {
-    localStorage.removeItem("adminAuthToken")
-    localStorage.removeItem("adminUserEmail")
-    router.push("/admin")
-  }
-
-  // Skip layout for login page
-  if (pathname === "/admin") {
-    return <>{children}</>
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1a3c61]"></div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated && pathname !== "/admin") {
-    return null // Will redirect in useEffect
-  }
 
   const menuItems = [
     { name: "Dashboard", path: "/admin/dashboard" },
@@ -101,22 +58,6 @@ export default function AdminLayout({
             ))}
           </nav>
         </div>
-        <div className="flex-shrink-0 flex border-t border-white/10 p-4">
-          <div className="flex items-center">
-            <div>
-              <p className="text-sm font-medium text-white">{localStorage.getItem("adminUserEmail") || "Admin User"}</p>
-              <p className="text-xs text-white/70">Administrator</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="ml-auto text-white/70 hover:text-white hover:bg-[#132e4a]"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Mobile header */}
@@ -134,9 +75,6 @@ export default function AdminLayout({
               className="bg-white p-1 rounded"
             />
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white">
-            <LogOut className="h-5 w-5" />
-          </Button>
         </div>
       </div>
 
@@ -182,24 +120,6 @@ export default function AdminLayout({
                   </Link>
                 ))}
               </nav>
-            </div>
-            <div className="flex-shrink-0 flex border-t border-white/10 p-4">
-              <div className="flex items-center">
-                <div>
-                  <p className="text-sm font-medium text-white">
-                    {localStorage.getItem("adminUserEmail") || "Admin User"}
-                  </p>
-                  <p className="text-xs text-white/70">Administrator</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="ml-auto text-white/70 hover:text-white hover:bg-[#132e4a]"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
           </div>
         </div>
