@@ -148,19 +148,23 @@ export default function EditPagePage() {
     }
   }, [id])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsLoading(true)
 
     // In a real application, you would send this data to your API
-    setTimeout(() => {
-      setIsLoading(false)
-      setIsSaved(true)
+    // For now, we'll just simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Reset the saved message after 3 seconds
-      setTimeout(() => {
-        setIsSaved(false)
-      }, 3000)
-    }, 1000)
+    // Revalidate the page
+    await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_REVALIDATE_SECRET}&path=${slug}`)
+
+    setIsLoading(false)
+    setIsSaved(true)
+
+    // Reset the saved message after 3 seconds
+    setTimeout(() => {
+      setIsSaved(false)
+    }, 3000)
   }
 
   const handleGenerateSlug = () => {
