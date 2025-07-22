@@ -1,7 +1,11 @@
-// lib/auth.ts
-import { supabase, supabaseAdmin } from './supabase'
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { auth, adminAuth, adminDb } from "./firebase"
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  User,
+} from "firebase/auth"
+import { cookies } from "next/headers"
+import { NextRequest, NextResponse } from "next/server"
 
 export interface AdminUser {
   id: string
@@ -11,74 +15,72 @@ export interface AdminUser {
 }
 
 // Sign in function
-export async function signIn(email: string, password: string): Promise<{ user: User; session: Session; adminData: { role: string; created_at: string; } }> {
+export async function signIn(
+  email: string,
+  password: string
+): Promise<{ user: User; adminData: { role: string; created_at: string } }> {
   try {
-    // First check if user exists in admin_users table
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin_users')
-      .select('role, created_at')
-      .eq('email', email)
-      .single()
+    // Sign in with Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+    const user = userCredential.user
 
-    if (adminError || !adminUser) {
-      throw new Error('Invalid email or password')
+    // Get admin user from Firestore
+    const adminUserDoc = await adminDb
+      .collection("admin_users")
+      .doc(user.uid)
+      .get()
+
+    if (!adminUserDoc.exists) {
+      throw new Error("Invalid email or password")
     }
 
-    // Sign in with Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-
-    if (error || !data.user || !data.session) {
-      throw new Error('Invalid email or password')
+    const adminData = adminUserDoc.data() as {
+      role: string
+      created_at: string
     }
 
-    // IMPORTANT: Return the user, session, and admin data instead of setting cookies here.
-    return { 
-      user: data.user, 
-      session: data.session,
-      adminData: {
-        role: adminUser.role,
-        created_at: adminUser.created_at
-      }
+    return {
+      user,
+      adminData,
     }
   } catch (error) {
-    console.error('Sign in error:', error)
+    console.error("Sign in error:", error)
     throw error // Re-throw the error to be caught by the API route
   }
 }
+
 // Get current admin user by validating the access token
-export async function getAdminUser(accessToken: string | undefined): Promise<AdminUser | null> {
+export async function getAdminUser(
+  accessToken: string | undefined
+): Promise<AdminUser | null> {
   try {
     if (!accessToken) {
       return null
     }
 
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken)
+    const decodedToken = await adminAuth.verifyIdToken(accessToken)
+    const uid = decodedToken.uid
 
-    if (error || !user || !user.email) {
+    const adminUserDoc = await adminDb.collection("admin_users").doc(uid).get()
+
+    if (!adminUserDoc.exists) {
       return null
     }
 
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin_users')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (adminError || !adminUser) {
-      return null
+    const adminUserData = adminUserDoc.data() as {
+      email: string
+      role: string
+      created_at: string
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      role: adminUser.role,
-      created_at: adminUser.created_at
+      id: uid,
+      email: adminUserData.email,
+      role: adminUserData.role,
+      created_at: adminUserData.created_at,
     }
   } catch (error) {
-    console.error('Get admin user error:', error)
+    console.error("Get admin user error:", error)
     return null
   }
 }
@@ -87,52 +89,52 @@ export async function getAdminUser(accessToken: string | undefined): Promise<Adm
 export async function signOut(): Promise<void> {
   try {
     const cookieStore = cookies()
-    
-    // Clear cookies
-    cookieStore.delete('sb-access-token')
-    cookieStore.delete('sb-refresh-token')
 
-    // Sign out from Supabase
-    await supabase.auth.signOut()
+    // Clear cookies
+    cookieStore.delete("fb-access-token")
+
+    // Sign out from Firebase
+    await firebaseSignOut(auth)
   } catch (error) {
-    console.error('Sign out error:', error)
+    console.error("Sign out error:", error)
     throw error
   }
 }
 
 // Middleware helper to check authentication
-export async function checkAuth(request: NextRequest): Promise<AdminUser | null> {
+export async function checkAuth(
+  request: NextRequest
+): Promise<AdminUser | null> {
   try {
-    const accessToken = request.cookies.get('sb-access-token')?.value
-    
+    const accessToken = request.cookies.get("fb-access-token")?.value
+
     if (!accessToken) {
       return null
     }
 
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken)
+    const decodedToken = await adminAuth.verifyIdToken(accessToken)
+    const uid = decodedToken.uid
 
-    if (error || !user) {
+    const adminUserDoc = await adminDb.collection("admin_users").doc(uid).get()
+
+    if (!adminUserDoc.exists) {
       return null
     }
 
-    const { data: adminUser, error: adminError } = await supabaseAdmin
-      .from('admin_users')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (adminError || !adminUser) {
-      return null
+    const adminUserData = adminUserDoc.data() as {
+      email: string
+      role: string
+      created_at: string
     }
 
     return {
-      id: user.id,
-      email: user.email!,
-      role: adminUser.role,
-      created_at: adminUser.created_at
+      id: uid,
+      email: adminUserData.email,
+      role: adminUserData.role,
+      created_at: adminUserData.created_at,
     }
   } catch (error) {
-    console.error('Check auth error:', error)
+    console.error("Check auth error:", error)
     return null
   }
 }
