@@ -51,14 +51,63 @@ export default function BlogAdminPage() {
     }
   }
 
-  const handleSaveDraft = () => {
-    console.log("Saving draft...")
-    // Implementation would save to database
+  const [id, setId] = useState<string | null>(null)
+
+  const handleSaveDraft = async () => {
+    await handleSave("draft")
   }
 
-  const handlePublish = () => {
-    console.log("Publishing post...")
-    // Implementation would publish to database and make live
+  const handlePublish = async () => {
+    await handleSave("published")
+  }
+
+  const handleSave = async (status: "draft" | "published") => {
+    const postData = {
+      title,
+      slug,
+      content,
+      excerpt: content.substring(0, 150),
+      category,
+      tags: tags.split(",").map(tag => tag.trim()),
+      status,
+      meta_title: title,
+      meta_description: metaDescription,
+      author_id: "admin", // Replace with actual author ID
+    }
+
+    if (id) {
+      // Update existing post
+      const response = await fetch(`/api/admin/blog/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postData),
+      })
+
+      if (response.ok) {
+        alert("Blog post updated successfully!")
+      } else {
+        alert("Failed to update blog post.")
+      }
+    } else {
+      // Create new post
+      const response = await fetch("/api/admin/blog", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postData),
+      })
+
+      if (response.ok) {
+        const newPost = await response.json()
+        setId(newPost.id)
+        alert("Blog post created successfully!")
+      } else {
+        alert("Failed to create blog post.")
+      }
+    }
   }
 
   const insertLink = () => {

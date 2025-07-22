@@ -98,6 +98,17 @@ export async function getService(slug: string): Promise<Service | null> {
   }
 }
 
+export async function deleteBlogPost(id: string): Promise<boolean> {
+  try {
+    const blogPostDocRef = adminDb.collection("blog_posts").doc(id)
+    await blogPostDocRef.delete()
+    return true
+  } catch (error) {
+    console.error("Error in deleteBlogPost:", error)
+    return false
+  }
+}
+
 export async function getServiceById(id: string): Promise<Service | null> {
   try {
     const serviceDocRef = adminDb.collection("services").doc(id)
