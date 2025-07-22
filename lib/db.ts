@@ -1,4 +1,17 @@
-import { supabase } from "./supabase"
+import { db } from "./firebase"
+import {
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  Timestamp,
+} from "firebase/firestore"
 
 // Database types
 export interface Service {
@@ -13,8 +26,8 @@ export interface Service {
   status: "published" | "draft"
   meta_title?: string
   meta_description?: string
-  created_at: string
-  updated_at: string
+  created_at: Timestamp
+  updated_at: Timestamp
 }
 
 export interface BlogPost {
@@ -30,8 +43,8 @@ export interface BlogPost {
   author_id: string
   meta_title?: string
   meta_description?: string
-  created_at: string
-  updated_at: string
+  created_at: Timestamp
+  updated_at: Timestamp
   author?: {
     name: string
     email: string
@@ -46,7 +59,7 @@ export interface MediaItem {
   file_size: number
   url: string
   alt_text?: string
-  created_at: string
+  created_at: Timestamp
 }
 
 export interface AdminUser {
@@ -54,56 +67,46 @@ export interface AdminUser {
   email: string
   name: string
   role: string
-  created_at: string
+  created_at: Timestamp
 }
 
 // Service operations
 export async function getServices(): Promise<Service[]> {
   try {
-    const { data, error } = await supabase.from("services").select("*").order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching services:", error)
-      return []
-    }
-
-    return data || []
+    const servicesCol = collection(db, "services")
+    const q = query(servicesCol, orderBy("created_at", "desc"))
+    const servicesSnapshot = await getDocs(q)
+    const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service))
+    return servicesList
   } catch (error) {
-    console.error("Error in getServices:", error)
+    console.error("Error fetching services:", error)
     return []
   }
 }
 
 export async function getPublishedServices(): Promise<Service[]> {
   try {
-    const { data, error } = await supabase
-      .from("services")
-      .select("*")
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching published services:", error)
-      return []
-    }
-
-    return data || []
+    const servicesCol = collection(db, "services")
+    const q = query(servicesCol, where("status", "==", "published"), orderBy("created_at", "desc"))
+    const servicesSnapshot = await getDocs(q)
+    const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service))
+    return servicesList
   } catch (error) {
-    console.error("Error in getPublishedServices:", error)
+    console.error("Error fetching published services:", error)
     return []
   }
 }
 
 export async function getService(slug: string): Promise<Service | null> {
   try {
-    const { data, error } = await supabase.from("services").select("*").eq("slug", slug).single()
-
-    if (error) {
-      console.error("Error fetching service:", error)
+    const servicesCol = collection(db, "services")
+    const q = query(servicesCol, where("slug", "==", slug))
+    const servicesSnapshot = await getDocs(q)
+    if (servicesSnapshot.empty) {
       return null
     }
-
-    return data
+    const serviceDoc = servicesSnapshot.docs[0]
+    return { id: serviceDoc.id, ...serviceDoc.data() } as Service
   } catch (error) {
     console.error("Error in getService:", error)
     return null
@@ -112,14 +115,12 @@ export async function getService(slug: string): Promise<Service | null> {
 
 export async function getServiceById(id: string): Promise<Service | null> {
   try {
-    const { data, error } = await supabase.from("services").select("*").eq("id", id).single()
-
-    if (error) {
-      console.error("Error fetching service by ID:", error)
+    const serviceDocRef = doc(db, "services", id)
+    const serviceDoc = await getDoc(serviceDocRef)
+    if (!serviceDoc.exists()) {
       return null
     }
-
-    return data
+    return { id: serviceDoc.id, ...serviceDoc.data() } as Service
   } catch (error) {
     console.error("Error in getServiceById:", error)
     return null
@@ -130,18 +131,14 @@ export async function createService(
   service: Omit<Service, "id" | "created_at" | "updated_at">,
 ): Promise<Service | null> {
   try {
-    const { data, error } = await supabase
-      .from("services")
-      .insert([{ ...service, updated_at: new Date().toISOString() }])
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating service:", error)
-      return null
+    const servicesCol = collection(db, "services")
+    const newService = {
+      ...service,
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
     }
-
-    return data
+    const docRef = await addDoc(servicesCol, newService)
+    return { id: docRef.id, ...newService }
   } catch (error) {
     console.error("Error in createService:", error)
     return null
@@ -150,19 +147,14 @@ export async function createService(
 
 export async function updateService(id: string, service: Partial<Service>): Promise<Service | null> {
   try {
-    const { data, error } = await supabase
-      .from("services")
-      .update({ ...service, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error updating service:", error)
-      return null
+    const serviceDocRef = doc(db, "services", id)
+    const updatedService = {
+      ...service,
+      updated_at: Timestamp.now(),
     }
-
-    return data
+    await updateDoc(serviceDocRef, updatedService)
+    const serviceDoc = await getDoc(serviceDocRef)
+    return { id: serviceDoc.id, ...serviceDoc.data() } as Service
   } catch (error) {
     console.error("Error in updateService:", error)
     return null
@@ -171,13 +163,8 @@ export async function updateService(id: string, service: Partial<Service>): Prom
 
 export async function deleteService(id: string): Promise<boolean> {
   try {
-    const { error } = await supabase.from("services").delete().eq("id", id)
-
-    if (error) {
-      console.error("Error deleting service:", error)
-      return false
-    }
-
+    const serviceDocRef = doc(db, "services", id)
+    await deleteDoc(serviceDocRef)
     return true
   } catch (error) {
     console.error("Error in deleteService:", error)
@@ -188,66 +175,77 @@ export async function deleteService(id: string): Promise<boolean> {
 // Blog operations
 export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select(`
-        *,
-        author:admin_users(name, email)
-      `)
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching blog posts:", error)
-      return []
-    }
-
-    return data || []
+    const blogPostsCol = collection(db, "blog_posts")
+    const q = query(blogPostsCol, orderBy("created_at", "desc"))
+    const blogPostsSnapshot = await getDocs(q)
+    const blogPostsList = blogPostsSnapshot.docs.map(async doc => {
+      const post = { id: doc.id, ...doc.data() } as BlogPost
+      if (post.author_id) {
+        const userDocRef = doc(db, "admin_users", post.author_id)
+        const userDoc = await getDoc(userDocRef)
+        if (userDoc.exists()) {
+          post.author = {
+            name: userDoc.data().name,
+            email: userDoc.data().email,
+          }
+        }
+      }
+      return post
+    })
+    return Promise.all(blogPostsList)
   } catch (error) {
-    console.error("Error in getBlogPosts:", error)
+    console.error("Error fetching blog posts:", error)
     return []
   }
 }
 
 export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
   try {
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select(`
-        *,
-        author:admin_users(name, email)
-      `)
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching published blog posts:", error)
-      return []
-    }
-
-    return data || []
+    const blogPostsCol = collection(db, "blog_posts")
+    const q = query(blogPostsCol, where("status", "==", "published"), orderBy("created_at", "desc"))
+    const blogPostsSnapshot = await getDocs(q)
+    const blogPostsList = blogPostsSnapshot.docs.map(async doc => {
+      const post = { id: doc.id, ...doc.data() } as BlogPost
+      if (post.author_id) {
+        const userDocRef = doc(db, "admin_users", post.author_id)
+        const userDoc = await getDoc(userDocRef)
+        if (userDoc.exists()) {
+          post.author = {
+            name: userDoc.data().name,
+            email: userDoc.data().email,
+          }
+        }
+      }
+      return post
+    })
+    return Promise.all(blogPostsList)
   } catch (error) {
-    console.error("Error in getPublishedBlogPosts:", error)
+    console.error("Error fetching published blog posts:", error)
     return []
   }
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select(`
-        *,
-        author:admin_users(name, email)
-      `)
-      .eq("slug", slug)
-      .single()
-
-    if (error) {
-      console.error("Error fetching blog post:", error)
+    const blogPostsCol = collection(db, "blog_posts")
+    const q = query(blogPostsCol, where("slug", "==", slug))
+    const blogPostsSnapshot = await getDocs(q)
+    if (blogPostsSnapshot.empty) {
       return null
     }
-
-    return data
+    const blogPostDoc = blogPostsSnapshot.docs[0]
+    const post = { id: blogPostDoc.id, ...blogPostDoc.data() } as BlogPost
+    if (post.author_id) {
+      const userDocRef = doc(db, "admin_users", post.author_id)
+      const userDoc = await getDoc(userDocRef)
+      if (userDoc.exists()) {
+        post.author = {
+          name: userDoc.data().name,
+          email: userDoc.data().email,
+        }
+      }
+    }
+    return post
   } catch (error) {
     console.error("Error in getBlogPost:", error)
     return null
@@ -258,18 +256,14 @@ export async function createBlogPost(
   post: Omit<BlogPost, "id" | "created_at" | "updated_at">,
 ): Promise<BlogPost | null> {
   try {
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .insert([{ ...post, updated_at: new Date().toISOString() }])
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating blog post:", error)
-      return null
+    const blogPostsCol = collection(db, "blog_posts")
+    const newPost = {
+      ...post,
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
     }
-
-    return data
+    const docRef = await addDoc(blogPostsCol, newPost)
+    return { id: docRef.id, ...newPost }
   } catch (error) {
     console.error("Error in createBlogPost:", error)
     return null
@@ -278,19 +272,14 @@ export async function createBlogPost(
 
 export async function updateBlogPost(id: string, post: Partial<BlogPost>): Promise<BlogPost | null> {
   try {
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .update({ ...post, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error updating blog post:", error)
-      return null
+    const blogPostDocRef = doc(db, "blog_posts", id)
+    const updatedPost = {
+      ...post,
+      updated_at: Timestamp.now(),
     }
-
-    return data
+    await updateDoc(blogPostDocRef, updatedPost)
+    const blogPostDoc = await getDoc(blogPostDocRef)
+    return { id: blogPostDoc.id, ...blogPostDoc.data() } as BlogPost
   } catch (error) {
     console.error("Error in updateBlogPost:", error)
     return null
@@ -299,60 +288,18 @@ export async function updateBlogPost(id: string, post: Partial<BlogPost>): Promi
 
 // Media operations
 export async function uploadMedia(file: File): Promise<MediaItem | null> {
-  try {
-    const fileExt = file.name.split(".").pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage.from("media").upload(fileName, file)
-
-    if (uploadError) {
-      console.error("Error uploading file:", uploadError)
-      return null
-    }
-
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("media").getPublicUrl(fileName)
-
-    // Save to database
-    const { data, error } = await supabase
-      .from("media")
-      .insert([
-        {
-          filename: fileName,
-          original_name: file.name,
-          file_type: file.type,
-          file_size: file.size,
-          url: publicUrl,
-        },
-      ])
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error saving media to database:", error)
-      return null
-    }
-
-    return data
-  } catch (error) {
-    console.error("Error in uploadMedia:", error)
-    return null
-  }
+  // This function will need to be updated to use Firebase Storage instead of Supabase Storage.
+  // For now, it will return null.
+  return null
 }
 
 export async function getMedia(): Promise<MediaItem[]> {
   try {
-    const { data, error } = await supabase.from("media").select("*").order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching media:", error)
-      return []
-    }
-
-    return data || []
+    const mediaCol = collection(db, "media")
+    const q = query(mediaCol, orderBy("created_at", "desc"))
+    const mediaSnapshot = await getDocs(q)
+    const mediaList = mediaSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MediaItem))
+    return mediaList
   } catch (error) {
     console.error("Error in getMedia:", error)
     return []

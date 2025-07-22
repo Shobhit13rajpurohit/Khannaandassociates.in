@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server"
 import { getServiceById, updateService, deleteService } from "@/lib/db"
-import { getAdminUser } from "@/lib/auth"
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const { id } = params
     const service = await getServiceById(id)
 
@@ -24,11 +18,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const { id } = params
     const serviceData = await request.json()
     const updatedService = await updateService(id, serviceData)
@@ -45,11 +34,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const { id } = params
     const success = await deleteService(id)
 

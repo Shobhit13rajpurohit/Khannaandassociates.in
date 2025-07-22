@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server"
 import { getBlogPosts, createBlogPost } from "@/lib/db"
-import { getAdminUser } from "@/lib/auth"
 
 export async function GET() {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const posts = await getBlogPosts()
     return NextResponse.json(posts)
   } catch (error) {
@@ -19,14 +13,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const postData = await request.json()
-    // Ensure author_id is set from the authenticated user
-    const newPost = await createBlogPost({ ...postData, author_id: user.id })
+    // Ensure author_id is set to a default value
+    const newPost = await createBlogPost({ ...postData, author_id: "admin" })
     if (!newPost) {
       throw new Error("Failed to create blog post")
     }

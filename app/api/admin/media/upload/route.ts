@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server"
 import { uploadMedia } from "@/lib/db"
-import { getAdminUser } from "@/lib/auth"
 
 export async function POST(request: Request) {
   try {
-    const user = await getAdminUser()
-    if (!user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const formData = await request.formData()
     const file = formData.get("file") as File
 
