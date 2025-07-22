@@ -1294,7 +1294,7 @@ export default function EditPagePage() {
                       className="w-10 h-10 border border-gray-300 rounded-l-md flex items-center justify-center"
                       style={{ backgroundColor: "#1a3c61" }}
                     ></div>
-                    <Input id="primary-color" type="text" value="#1a3c61" className="rounded-l-none" />
+                    <Input id="primary-color" type="text" value="#1a3c61" className="rounded-l-none" readOnly />
                   </div>
                 </div>
 
@@ -1307,7 +1307,7 @@ export default function EditPagePage() {
                       className="w-10 h-10 border border-gray-300 rounded-l-md flex items-center justify-center"
                       style={{ backgroundColor: "#4BB4E6" }}
                     ></div>
-                    <Input id="secondary-color" type="text" value="#4BB4E6" className="rounded-l-none" />
+                    <Input id="secondary-color" type="text" value="#4BB4E6" className="rounded-l-none" readOnly />
                   </div>
                 </div>
 
