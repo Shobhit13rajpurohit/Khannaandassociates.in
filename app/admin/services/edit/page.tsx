@@ -21,6 +21,7 @@ export default function EditServicePage() {
   const [content, setContent] = useState("")
   const [keyPoints, setKeyPoints] = useState("")
   const [featuredImage, setFeaturedImage] = useState("")
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null)
   const [relatedServices, setRelatedServices] = useState("")
   const [status, setStatus] = useState("published")
   const [isLoading, setIsLoading] = useState(false)
@@ -67,14 +68,26 @@ export default function EditServicePage() {
 
     try {
       const token = localStorage.getItem("adminAuthToken")
+      let imageUrl = featuredImage
+      if (featuredImageFile) {
+        const formData = new FormData()
+        formData.append("file", featuredImageFile)
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
+        const { url } = await response.json()
+        imageUrl = url
+      }
+
       const serviceData = {
         title,
         slug,
         description,
         content,
-        keyPoints,
-        featuredImage,
-        relatedServices,
+        key_points: keyPoints.split("\n"),
+        featured_image: imageUrl,
+        related_services: relatedServices.split(",").map(s => s.trim()),
         status,
       }
 
@@ -93,6 +106,10 @@ export default function EditServicePage() {
       if (response.ok) {
         setIsSaved(true)
         setTimeout(() => setIsSaved(false), 3000)
+
+        // Revalidate the page
+        await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_REVALIDATE_SECRET}&path=/services/${slug}`)
+
 
         // If creating new service, redirect to edit page
         if (!id) {
@@ -133,6 +150,23 @@ export default function EditServicePage() {
     } catch (err) {
       setError("Error deleting service")
       console.error(err)
+    }
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setFeaturedImageFile(file)
+      setFeaturedImage(URL.createObjectURL(file))
+    }
+  }
+
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      setFeaturedImageFile(file)
+      setFeaturedImage(URL.createObjectURL(file))
     }
   }
 
@@ -288,15 +322,39 @@ export default function EditServicePage() {
                 <div className="space-y-6">
                   <div>
                     <Label htmlFor="featuredImage" className="text-base">
-                      Featured Image URL
+                      Featured Image
                     </Label>
-                    <Input
-                      id="featuredImage"
-                      value={featuredImage}
-                      onChange={(e) => setFeaturedImage(e.target.value)}
-                      className="mt-1"
-                      placeholder="https://example.com/image.jpg"
-                    />
+                    <div
+                      className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={handleImageDrop}
+                    >
+                      <div className="space-y-1 text-center">
+                        <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="flex text-sm text-gray-600">
+                          <label
+                            htmlFor="featuredImage"
+                            className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
+                          >
+                            <span>Upload a file</span>
+                            <input
+                              id="featuredImage"
+                              name="featuredImage"
+                              type="file"
+                              className="sr-only"
+                              onChange={handleImageChange}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      </div>
+                    </div>
+                    {featuredImage && (
+                      <div className="mt-4">
+                        <img src={featuredImage} alt="Featured image preview" className="w-full h-auto rounded-lg" />
+                      </div>
+                    )}
                   </div>
 
                   <div>
