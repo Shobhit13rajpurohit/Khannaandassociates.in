@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase-admin/storage";
 import admin from "firebase-admin";
 
 const firebaseConfig = {
@@ -30,5 +31,6 @@ if (!admin.apps.length) {
 
 const adminAuth = admin.auth();
 const adminDb = admin.firestore();
+const adminStorage = getStorage;
 
-export { app, db, auth, adminAuth, adminDb };
+export { app, db, auth, adminAuth, adminDb, adminStorage };

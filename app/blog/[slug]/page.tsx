@@ -81,7 +81,7 @@ const getBlogPost = (slug: string) => {
 }
 
 export async function generateMetadata({ params }: BlogPostParams): Promise<Metadata> {
-  const post = getBlogPost(params.slug)
+  const post = await getBlogPost(params.slug)
 
   return {
     title: `${post.title} | Khanna and Associates Legal Blog`,
@@ -98,8 +98,8 @@ export async function generateMetadata({ params }: BlogPostParams): Promise<Meta
   }
 }
 
-export default function BlogPostPage({ params }: BlogPostParams) {
-  const post = getBlogPost(params.slug)
+export default async function BlogPostPage({ params }: BlogPostParams) {
+  const post = await getBlogPost(params.slug)
 
   // Related posts (would typically be fetched based on tags or category)
   const relatedPosts = [
