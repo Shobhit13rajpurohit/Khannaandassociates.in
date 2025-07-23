@@ -1,8 +1,11 @@
 import Link from "next/link"
 import Image from "next/image"
+import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Calendar, User, Tag, Facebook, Twitter, Linkedin, Search } from "lucide-react"
 import type { Metadata } from "next"
+import { getBlogPost, getPublishedBlogPosts } from "@/lib/db"
+import { format } from "date-fns"
 
 interface BlogPostParams {
   params: {
@@ -10,89 +13,37 @@ interface BlogPostParams {
   }
 }
 
-// This would typically come from a CMS or database
-const getBlogPost = (slug: string) => {
-  // Mock blog post data
-  const blogPost = {
-    title: "Understanding the New Real Estate Regulations in Delhi",
-    slug: "understanding-new-real-estate-regulations-delhi",
-    content: `
-      <p>The real estate sector in Delhi has witnessed significant regulatory changes in recent years, aimed at enhancing transparency, accountability, and consumer protection. These changes have profound implications for property owners, buyers, and real estate developers operating in the National Capital Region.</p>
-      
-      <h2>Key Regulatory Changes</h2>
-      
-      <p>The Real Estate (Regulation and Development) Act, 2016 (RERA) has been a game-changer for the real estate sector in Delhi. The Act mandates that all real estate projects with an area of 500 square meters or more, or those comprising eight or more apartments, must be registered with the Delhi Real Estate Regulatory Authority.</p>
-      
-      <p>Some of the key provisions of RERA include:</p>
-      
-      <ul>
-        <li>Mandatory registration of real estate projects and real estate agents</li>
-        <li>Disclosure of all project details, including layout plans, government approvals, and land status</li>
-        <li>Deposit of 70% of the funds collected from buyers in a separate account to ensure project completion</li>
-        <li>Adherence to specified timelines for project completion</li>
-        <li>Structural defect liability for five years</li>
-      </ul>
-      
-      <h2>Impact on Property Buyers</h2>
-      
-      <p>For property buyers in Delhi, these regulatory changes offer several benefits:</p>
-      
-      <ol>
-        <li><strong>Enhanced Transparency:</strong> Buyers now have access to comprehensive information about real estate projects, enabling informed decision-making.</li>
-        <li><strong>Financial Security:</strong> The requirement to deposit 70% of funds in a separate account ensures that developers cannot divert funds from one project to another, reducing the risk of project delays or abandonment.</li>
-        <li><strong>Timely Delivery:</strong> Developers are now legally bound to deliver projects within the specified timeframe, failing which they are liable to pay penalties.</li>
-        <li><strong>Quality Assurance:</strong> The five-year structural defect liability ensures that developers maintain high construction standards.</li>
-      </ol>
-      
-      <h2>Challenges and Considerations</h2>
-      
-      <p>Despite these positive changes, there are several challenges and considerations that property buyers and investors should be aware of:</p>
-      
-      <p>The implementation of RERA in Delhi has been gradual, and not all projects may be fully compliant yet. Buyers should verify the RERA registration status of projects before making any investment decisions.</p>
-      
-      <p>The real estate market in Delhi is also influenced by other factors such as the Master Plan of Delhi 2021, which outlines the development strategy for the city, and the Land Pooling Policy, which aims to meet the growing housing demand.</p>
-      
-      <h2>Legal Assistance for Real Estate Matters</h2>
-      
-      <p>Given the complexity of real estate regulations in Delhi, it is advisable to seek legal assistance when buying, selling, or investing in property. A qualified real estate lawyer can help you navigate the regulatory landscape, conduct due diligence, review property documents, and ensure compliance with all legal requirements.</p>
-      
-      <p>At Khanna and Associates, our team of experienced real estate lawyers in Delhi provides comprehensive legal services for all property-related matters. From conducting title searches and drafting sale deeds to resolving property disputes and ensuring RERA compliance, we offer end-to-end legal support to protect your real estate investments.</p>
-      
-      <h2>Conclusion</h2>
-      
-      <p>The new real estate regulations in Delhi represent a significant step towards creating a more transparent, accountable, and consumer-friendly real estate sector. By understanding these regulations and seeking appropriate legal guidance, property buyers and investors can make informed decisions and protect their interests in the dynamic Delhi real estate market.</p>
-      
-      <p>For personalized legal advice on real estate matters in Delhi, contact our team of expert lawyers at Khanna and Associates.</p>
-    `,
-    date: "March 15, 2023",
-    author: "Rajiv Khanna",
-    authorTitle: "Senior Partner, Real Estate Law",
-    authorImage: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?q=80&w=1974",
-    category: "Real Estate Law",
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073",
-    tags: ["Real Estate", "Delhi", "Regulations", "RERA", "Property Law"],
-    metaDescription:
-      "An in-depth analysis of the recent changes in real estate regulations in Delhi and how they impact property owners and buyers.",
-    metaKeywords:
-      "real estate regulations Delhi, RERA Delhi, property laws Delhi, real estate legal updates, Delhi property regulations",
+export async function generateStaticParams() {
+  try {
+    const posts = await getPublishedBlogPosts()
+    return posts.map(post => ({
+      slug: post.slug,
+    }))
+  } catch {
+    return []
   }
-
-  return blogPost
 }
 
 export async function generateMetadata({ params }: BlogPostParams): Promise<Metadata> {
   const post = await getBlogPost(params.slug)
 
+  if (!post) {
+    return {
+      title: "Blog Post Not Found",
+      description: "The requested blog post could not be found.",
+    }
+  }
+
   return {
     title: `${post.title} | Khanna and Associates Legal Blog`,
-    description: post.metaDescription,
-    keywords: post.metaKeywords,
+    description: post.meta_description,
+    keywords: post.tags,
     openGraph: {
       title: post.title,
-      description: post.metaDescription,
+      description: post.meta_description,
       type: "article",
-      publishedTime: post.date,
-      authors: [post.author],
+      publishedTime: post.created_at.toDate().toISOString(),
+      authors: [post.author?.name],
       tags: post.tags,
     },
   }
@@ -101,30 +52,13 @@ export async function generateMetadata({ params }: BlogPostParams): Promise<Meta
 export default async function BlogPostPage({ params }: BlogPostParams) {
   const post = await getBlogPost(params.slug)
 
+  if (!post) {
+    notFound()
+  }
+
   // Related posts (would typically be fetched based on tags or category)
-  const relatedPosts = [
-    {
-      id: 2,
-      title: "The Impact of Recent Supreme Court Judgments on Corporate Governance",
-      slug: "impact-supreme-court-judgments-corporate-governance",
-      date: "February 28, 2023",
-      image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=2070",
-    },
-    {
-      id: 5,
-      title: "Legal Implications of the New Labour Codes",
-      slug: "legal-implications-new-labour-codes",
-      date: "November 5, 2022",
-      image: "https://images.unsplash.com/photo-1521791055366-0d553872125f?q=80&w=2069",
-    },
-    {
-      id: 6,
-      title: "Cybersecurity Laws in India: Current Framework and Future Directions",
-      slug: "cybersecurity-laws-india-framework-future",
-      date: "October 18, 2022",
-      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070",
-    },
-  ]
+  const allPosts = await getPublishedBlogPosts()
+  const relatedPosts = allPosts.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3)
 
   return (
     <div className="min-h-screen">
@@ -133,7 +67,7 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('${post.image}')`,
+            backgroundImage: `url('${post.featured_image}')`,
             filter: "brightness(0.4)",
           }}
         ></div>
@@ -142,9 +76,9 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">{post.title}</h1>
             <div className="flex items-center text-sm text-gray-200 mb-3">
               <Calendar className="h-4 w-4 mr-1" />
-              <span className="mr-4">{post.date}</span>
+              <span className="mr-4">{format(post.created_at.toDate(), "MMMM dd, yyyy")}</span>
               <User className="h-4 w-4 mr-1" />
-              <span>{post.author}</span>
+              <span>{post.author?.name || "Khanna and Associates"}</span>
             </div>
           </div>
         </div>
@@ -199,19 +133,17 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
                 <div className="flex items-start">
                   <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
                     <Image
-                      src={post.authorImage || "/placeholder.svg"}
-                      alt={post.author}
+                      src={"/placeholder-user.jpg"}
+                      alt={post.author?.name || "author"}
                       fill
                       className="object-cover"
                     />
                   </div>
                   <div className="ml-6">
-                    <h3 className="text-xl font-bold text-[#1a3c61]">{post.author}</h3>
-                    <p className="text-[#4BB4E6] mb-2">{post.authorTitle}</p>
+                    <h3 className="text-xl font-bold text-[#1a3c61]">{post.author?.name}</h3>
+                    <p className="text-[#4BB4E6] mb-2">{post.author?.email}</p>
                     <p className="text-gray-600">
-                      Rajiv Khanna is a Senior Partner at Khanna and Associates with over 35 years of experience in real
-                      estate law. He has advised on some of the most significant property transactions in Delhi and is a
-                      recognized expert in RERA compliance.
+                      Expert in the field of law, providing insights and analysis on various legal topics.
                     </p>
                   </div>
                 </div>
@@ -222,18 +154,20 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
                 <h3 className="text-2xl font-bold mb-6 text-[#1a3c61]">Related Articles</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {relatedPosts.map((relatedPost) => (
+                  {relatedPosts.map(relatedPost => (
                     <div key={relatedPost.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                       <div className="relative h-40">
                         <Image
-                          src={relatedPost.image || "/placeholder.svg"}
+                          src={relatedPost.featured_image || "/placeholder.svg"}
                           alt={relatedPost.title}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div className="p-4">
-                        <p className="text-gray-500 text-xs mb-2">{relatedPost.date}</p>
+                        <p className="text-gray-500 text-xs mb-2">
+                          {format(relatedPost.created_at.toDate(), "MMMM dd, yyyy")}
+                        </p>
                         <h4 className="font-semibold text-[#1a3c61] mb-2 line-clamp-2">
                           <Link href={`/blog/${relatedPost.slug}`} className="hover:text-[#4BB4E6]">
                             {relatedPost.title}
@@ -290,10 +224,15 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
               <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <h3 className="text-xl font-bold mb-4 text-[#1a3c61]">Recent Posts</h3>
                 <ul className="space-y-4">
-                  {relatedPosts.map((post) => (
+                  {allPosts.slice(0, 3).map(post => (
                     <li key={post.id} className="flex items-start">
                       <div className="relative w-16 h-16 rounded overflow-hidden flex-shrink-0">
-                        <Image src={post.image || "/placeholder.svg"} alt={post.title} fill className="object-cover" />
+                        <Image
+                          src={post.featured_image || "/placeholder.svg"}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
                       <div className="ml-4">
                         <Link
@@ -302,7 +241,9 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
                         >
                           {post.title}
                         </Link>
-                        <p className="text-gray-500 text-xs mt-1">{post.date}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {format(post.created_at.toDate(), "MMMM dd, yyyy")}
+                        </p>
                       </div>
                     </li>
                   ))}

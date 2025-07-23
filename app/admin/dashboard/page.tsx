@@ -6,8 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Users, FileText, MapPin, Edit3, ImageIcon, Globe } from "lucide-react"
 import Link from "next/link"
 
+interface Stats {
+  pages: number
+  services: number
+  teamMembers: number
+  locations: number
+  blogPosts: number
+  mediaItems: number
+}
+
+interface Activity {
+  action: string
+  item: string
+  time: string
+  user: string
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     pages: 0,
     services: 0,
     teamMembers: 0,
@@ -16,7 +32,7 @@ export default function AdminDashboard() {
     mediaItems: 0,
   })
 
-  const [recentActivity, setRecentActivity] = useState([
+  const [recentActivity] = useState<Activity[]>([
     { action: "Updated", item: "Home Page", time: "2 hours ago", user: "Admin" },
     { action: "Added", item: "New Team Member", time: "Yesterday", user: "Admin" },
     { action: "Edited", item: "Services Page", time: "3 days ago", user: "Admin" },
@@ -24,16 +40,78 @@ export default function AdminDashboard() {
   ])
 
   useEffect(() => {
-    // In a real application, you would fetch this data from your API
-    setStats({
-      pages: 12,
-      services: 23,
-      teamMembers: 8,
-      locations: 8,
-      blogPosts: 15,
-      mediaItems: 42,
-    })
+    // Simulate API call - replace with actual API call
+    const fetchStats = async () => {
+      try {
+        // In a real application, you would fetch this data from your API
+        setStats({
+          pages: 12,
+          services: 23,
+          teamMembers: 8,
+          locations: 8,
+          blogPosts: 15,
+          mediaItems: 42,
+        })
+      } catch (error) {
+        console.error("Error fetching stats:", error)
+      }
+    }
+
+    fetchStats()
   }, [])
+
+  const StatCard = ({ 
+    href, 
+    icon: Icon, 
+    bgColor, 
+    iconColor, 
+    label, 
+    value 
+  }: {
+    href: string
+    icon: React.ComponentType<{ className?: string }>
+    bgColor: string
+    iconColor: string
+    label: string
+    value: number
+  }) => (
+    <Link href={href}>
+      <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
+        <div className="flex items-center">
+          <div className={`p-3 rounded-full ${bgColor} mr-4`}>
+            <Icon className={`h-6 w-6 ${iconColor}`} />
+          </div>
+          <div>
+            <p className="text-gray-500 text-sm">{label}</p>
+            <p className="text-2xl font-bold">{value}</p>
+          </div>
+        </div>
+      </Card>
+    </Link>
+  )
+
+  const ProgressBar = ({ label, percentage }: { label: string; percentage: number }) => {
+    const getBarColor = (percent: number) => {
+      if (percent >= 90) return "bg-green-500"
+      if (percent >= 75) return "bg-yellow-500"
+      return "bg-red-500"
+    }
+
+    return (
+      <div>
+        <div className="flex justify-between mb-1">
+          <span className="text-sm font-medium">{label}</span>
+          <span className="text-sm text-gray-500">{percentage}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className={`${getBarColor(percentage)} h-2 rounded-full transition-all duration-300`}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -44,89 +122,59 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <Link href="/admin/pages">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100 mr-4">
-                <FileText className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Pages</p>
-                <p className="text-2xl font-bold">{stats.pages}</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <StatCard
+          href="/admin/pages"
+          icon={FileText}
+          bgColor="bg-blue-100"
+          iconColor="text-blue-600"
+          label="Pages"
+          value={stats.pages}
+        />
 
-        <Link href="/admin/services">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 mr-4">
-                <Globe className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Services</p>
-                <p className="text-2xl font-bold">{stats.services}</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <StatCard
+          href="/admin/services"
+          icon={Globe}
+          bgColor="bg-green-100"
+          iconColor="text-green-600"
+          label="Services"
+          value={stats.services}
+        />
 
-        <Link href="/admin/team">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-100 mr-4">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Team Members</p>
-                <p className="text-2xl font-bold">{stats.teamMembers}</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <StatCard
+          href="/admin/team"
+          icon={Users}
+          bgColor="bg-purple-100"
+          iconColor="text-purple-600"
+          label="Team Members"
+          value={stats.teamMembers}
+        />
 
-        <Link href="/admin/locations">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100 mr-4">
-                <MapPin className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Locations</p>
-                <p className="text-2xl font-bold">{stats.locations}</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <StatCard
+          href="/admin/locations"
+          icon={MapPin}
+          bgColor="bg-yellow-100"
+          iconColor="text-yellow-600"
+          label="Locations"
+          value={stats.locations}
+        />
 
-        <Link href="/admin/blog">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-red-100 mr-4">
-                <Edit3 className="h-6 w-6 text-red-600" />
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Blog Posts</p>
-                <p className="text-2xl font-bold">{stats.blogPosts}</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <StatCard
+          href="/admin/blog"
+          icon={Edit3}
+          bgColor="bg-red-100"
+          iconColor="text-red-600"
+          label="Blog Posts"
+          value={stats.blogPosts}
+        />
 
-        <Link href="/admin/media">
-          <Card className="p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-indigo-100 mr-4">
-                <ImageIcon className="h-6 w-6 text-indigo-600" />
-              </div>
-              <div>
-                <p className="text-gray-500 text-sm">Media Items</p>
-                <p className="text-2xl font-bold">{stats.mediaItems}</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
+        <StatCard
+          href="/admin/media"
+          icon={ImageIcon}
+          bgColor="bg-indigo-100"
+          iconColor="text-indigo-600"
+          label="Media Items"
+          value={stats.mediaItems}
+        />
       </div>
 
       {/* Quick Actions */}
@@ -134,19 +182,19 @@ export default function AdminDashboard() {
         <h2 className="text-xl font-semibold text-[#1a3c61] mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <Link href="/admin/pages/edit?id=home">
-            <Button className="bg-[#1a3c61]">Edit Home Page</Button>
+            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Edit Home Page</Button>
           </Link>
-          <Link href="/blog/admin">
-            <Button className="bg-[#1a3c61]">Create Blog Post</Button>
+          <Link href="/blog/admin/new">
+            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Create Blog Post</Button>
           </Link>
           <Link href="/admin/services/new">
-            <Button className="bg-[#1a3c61]">Add Service</Button>
+            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Add Service</Button>
           </Link>
           <Link href="/admin/team/new">
-            <Button className="bg-[#1a3c61]">Add Team Member</Button>
+            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Add Team Member</Button>
           </Link>
           <Link href="/admin/media/upload">
-            <Button className="bg-[#1a3c61]">Upload Media</Button>
+            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Upload Media</Button>
           </Link>
         </div>
       </div>
@@ -157,7 +205,7 @@ export default function AdminDashboard() {
         <Card>
           <div className="divide-y">
             {recentActivity.map((activity, index) => (
-              <div key={index} className="p-4 flex items-center justify-between">
+              <div key={`activity-${index}`} className="p-4 flex items-center justify-between">
                 <div>
                   <p className="font-medium">
                     {activity.action} <span className="text-[#4BB4E6]">{activity.item}</span>
@@ -185,35 +233,9 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">SEO Score</span>
-                <span className="text-sm text-gray-500">85%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: "85%" }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">Performance</span>
-                <span className="text-sm text-gray-500">92%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: "92%" }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">Content Freshness</span>
-                <span className="text-sm text-gray-500">78%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: "78%" }}></div>
-              </div>
-            </div>
+            <ProgressBar label="SEO Score" percentage={85} />
+            <ProgressBar label="Performance" percentage={92} />
+            <ProgressBar label="Content Freshness" percentage={78} />
           </div>
 
           <div className="mt-6">

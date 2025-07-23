@@ -97,7 +97,35 @@ export async function getService(slug: string): Promise<Service | null> {
     return null
   }
 }
-
+export async function getBlogPostById(id: string): Promise<BlogPost | null> {
+  try {
+    const blogPostDocRef = adminDb.collection("blog_posts").doc(id)
+    const blogPostDoc = await blogPostDocRef.get()
+    
+    if (!blogPostDoc.exists) {
+      return null
+    }
+    
+    const post = { id: blogPostDoc.id, ...blogPostDoc.data() } as BlogPost
+    
+    // Fetch author information if available
+    if (post.author_id) {
+      const userDocRef = adminDb.collection("admin_users").doc(post.author_id)
+      const userDoc = await userDocRef.get()
+      if (userDoc.exists) {
+        post.author = {
+          name: userDoc.data()!.name,
+          email: userDoc.data()!.email,
+        }
+      }
+    }
+    
+    return post
+  } catch (error) {
+    console.error("Error in getBlogPostById:", error)
+    return null
+  }
+}
 export async function deleteBlogPost(id: string): Promise<boolean> {
   try {
     const blogPostDocRef = adminDb.collection("blog_posts").doc(id)
