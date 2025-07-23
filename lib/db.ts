@@ -1,17 +1,5 @@
-import { db } from "./firebase"
-import {
-  collection,
-  getDocs,
-  getDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  Timestamp,
-} from "firebase/firestore"
+import { adminDb } from "./firebase"
+import { Timestamp } from "firebase-admin/firestore"
 
 // Database types
 export interface Service {
@@ -73,9 +61,8 @@ export interface AdminUser {
 // Service operations
 export async function getServices(): Promise<Service[]> {
   try {
-    const servicesCol = collection(db, "services")
-    const q = query(servicesCol, orderBy("created_at", "desc"))
-    const servicesSnapshot = await getDocs(q)
+    const servicesCol = adminDb.collection("services")
+    const servicesSnapshot = await servicesCol.orderBy("created_at", "desc").get()
     const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service))
     return servicesList
   } catch (error) {
@@ -84,11 +71,25 @@ export async function getServices(): Promise<Service[]> {
   }
 }
 
+export async function getPage(slug: string): Promise<any | null> {
+  try {
+    const pagesCol = adminDb.collection("pages")
+    const pagesSnapshot = await pagesCol.where("slug", "==", slug).get()
+    if (pagesSnapshot.empty) {
+      return null
+    }
+    const pageDoc = pagesSnapshot.docs[0]
+    return { id: pageDoc.id, ...pageDoc.data() }
+  } catch (error) {
+    console.error("Error in getPage:", error)
+    return null
+  }
+}
+
 export async function getPublishedServices(): Promise<Service[]> {
   try {
-    const servicesCol = collection(db, "services")
-    const q = query(servicesCol, where("status", "==", "published"), orderBy("created_at", "desc"))
-    const servicesSnapshot = await getDocs(q)
+    const servicesCol = adminDb.collection("services")
+    const servicesSnapshot = await servicesCol.where("status", "==", "published").orderBy("created_at", "desc").get()
     const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service))
     return servicesList
   } catch (error) {
@@ -99,9 +100,8 @@ export async function getPublishedServices(): Promise<Service[]> {
 
 export async function getService(slug: string): Promise<Service | null> {
   try {
-    const servicesCol = collection(db, "services")
-    const q = query(servicesCol, where("slug", "==", slug))
-    const servicesSnapshot = await getDocs(q)
+    const servicesCol = adminDb.collection("services")
+    const servicesSnapshot = await servicesCol.where("slug", "==", slug).get()
     if (servicesSnapshot.empty) {
       return null
     }
@@ -113,11 +113,22 @@ export async function getService(slug: string): Promise<Service | null> {
   }
 }
 
+export async function deleteBlogPost(id: string): Promise<boolean> {
+  try {
+    const blogPostDocRef = adminDb.collection("blog_posts").doc(id)
+    await blogPostDocRef.delete()
+    return true
+  } catch (error) {
+    console.error("Error in deleteBlogPost:", error)
+    return false
+  }
+}
+
 export async function getServiceById(id: string): Promise<Service | null> {
   try {
-    const serviceDocRef = doc(db, "services", id)
-    const serviceDoc = await getDoc(serviceDocRef)
-    if (!serviceDoc.exists()) {
+    const serviceDocRef = adminDb.collection("services").doc(id)
+    const serviceDoc = await serviceDocRef.get()
+    if (!serviceDoc.exists) {
       return null
     }
     return { id: serviceDoc.id, ...serviceDoc.data() } as Service
@@ -131,13 +142,13 @@ export async function createService(
   service: Omit<Service, "id" | "created_at" | "updated_at">,
 ): Promise<Service | null> {
   try {
-    const servicesCol = collection(db, "services")
+    const servicesCol = adminDb.collection("services")
     const newService = {
       ...service,
       created_at: Timestamp.now(),
       updated_at: Timestamp.now(),
     }
-    const docRef = await addDoc(servicesCol, newService)
+    const docRef = await servicesCol.add(newService)
     return { id: docRef.id, ...newService }
   } catch (error) {
     console.error("Error in createService:", error)
@@ -147,13 +158,13 @@ export async function createService(
 
 export async function updateService(id: string, service: Partial<Service>): Promise<Service | null> {
   try {
-    const serviceDocRef = doc(db, "services", id)
+    const serviceDocRef = adminDb.collection("services").doc(id)
     const updatedService = {
       ...service,
       updated_at: Timestamp.now(),
     }
-    await updateDoc(serviceDocRef, updatedService)
-    const serviceDoc = await getDoc(serviceDocRef)
+    await serviceDocRef.update(updatedService)
+    const serviceDoc = await serviceDocRef.get()
     return { id: serviceDoc.id, ...serviceDoc.data() } as Service
   } catch (error) {
     console.error("Error in updateService:", error)
@@ -163,8 +174,8 @@ export async function updateService(id: string, service: Partial<Service>): Prom
 
 export async function deleteService(id: string): Promise<boolean> {
   try {
-    const serviceDocRef = doc(db, "services", id)
-    await deleteDoc(serviceDocRef)
+    const serviceDocRef = adminDb.collection("services").doc(id)
+    await serviceDocRef.delete()
     return true
   } catch (error) {
     console.error("Error in deleteService:", error)
@@ -175,18 +186,17 @@ export async function deleteService(id: string): Promise<boolean> {
 // Blog operations
 export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
-    const blogPostsCol = collection(db, "blog_posts")
-    const q = query(blogPostsCol, orderBy("created_at", "desc"))
-    const blogPostsSnapshot = await getDocs(q)
+    const blogPostsCol = adminDb.collection("blog_posts")
+    const blogPostsSnapshot = await blogPostsCol.orderBy("created_at", "desc").get()
     const blogPostsList = blogPostsSnapshot.docs.map(async doc => {
       const post = { id: doc.id, ...doc.data() } as BlogPost
       if (post.author_id) {
-        const userDocRef = doc(db, "admin_users", post.author_id)
-        const userDoc = await getDoc(userDocRef)
-        if (userDoc.exists()) {
+        const userDocRef = adminDb.collection("admin_users").doc(post.author_id)
+        const userDoc = await userDocRef.get()
+        if (userDoc.exists) {
           post.author = {
-            name: userDoc.data().name,
-            email: userDoc.data().email,
+            name: userDoc.data()!.name,
+            email: userDoc.data()!.email,
           }
         }
       }
@@ -201,18 +211,20 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 
 export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
   try {
-    const blogPostsCol = collection(db, "blog_posts")
-    const q = query(blogPostsCol, where("status", "==", "published"), orderBy("created_at", "desc"))
-    const blogPostsSnapshot = await getDocs(q)
+    const blogPostsCol = adminDb.collection("blog_posts")
+    const blogPostsSnapshot = await blogPostsCol
+      .where("status", "==", "published")
+      .orderBy("created_at", "desc")
+      .get()
     const blogPostsList = blogPostsSnapshot.docs.map(async doc => {
       const post = { id: doc.id, ...doc.data() } as BlogPost
       if (post.author_id) {
-        const userDocRef = doc(db, "admin_users", post.author_id)
-        const userDoc = await getDoc(userDocRef)
-        if (userDoc.exists()) {
+        const userDocRef = adminDb.collection("admin_users").doc(post.author_id)
+        const userDoc = await userDocRef.get()
+        if (userDoc.exists) {
           post.author = {
-            name: userDoc.data().name,
-            email: userDoc.data().email,
+            name: userDoc.data()!.name,
+            email: userDoc.data()!.email,
           }
         }
       }
@@ -227,21 +239,20 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
 
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    const blogPostsCol = collection(db, "blog_posts")
-    const q = query(blogPostsCol, where("slug", "==", slug))
-    const blogPostsSnapshot = await getDocs(q)
+    const blogPostsCol = adminDb.collection("blog_posts")
+    const blogPostsSnapshot = await blogPostsCol.where("slug", "==", slug).get()
     if (blogPostsSnapshot.empty) {
       return null
     }
     const blogPostDoc = blogPostsSnapshot.docs[0]
     const post = { id: blogPostDoc.id, ...blogPostDoc.data() } as BlogPost
     if (post.author_id) {
-      const userDocRef = doc(db, "admin_users", post.author_id)
-      const userDoc = await getDoc(userDocRef)
-      if (userDoc.exists()) {
+      const userDocRef = adminDb.collection("admin_users").doc(post.author_id)
+      const userDoc = await userDocRef.get()
+      if (userDoc.exists) {
         post.author = {
-          name: userDoc.data().name,
-          email: userDoc.data().email,
+          name: userDoc.data()!.name,
+          email: userDoc.data()!.email,
         }
       }
     }
@@ -256,13 +267,13 @@ export async function createBlogPost(
   post: Omit<BlogPost, "id" | "created_at" | "updated_at">,
 ): Promise<BlogPost | null> {
   try {
-    const blogPostsCol = collection(db, "blog_posts")
+    const blogPostsCol = adminDb.collection("blog_posts")
     const newPost = {
       ...post,
       created_at: Timestamp.now(),
       updated_at: Timestamp.now(),
     }
-    const docRef = await addDoc(blogPostsCol, newPost)
+    const docRef = await blogPostsCol.add(newPost)
     return { id: docRef.id, ...newPost }
   } catch (error) {
     console.error("Error in createBlogPost:", error)
@@ -272,13 +283,13 @@ export async function createBlogPost(
 
 export async function updateBlogPost(id: string, post: Partial<BlogPost>): Promise<BlogPost | null> {
   try {
-    const blogPostDocRef = doc(db, "blog_posts", id)
+    const blogPostDocRef = adminDb.collection("blog_posts").doc(id)
     const updatedPost = {
       ...post,
       updated_at: Timestamp.now(),
     }
-    await updateDoc(blogPostDocRef, updatedPost)
-    const blogPostDoc = await getDoc(blogPostDocRef)
+    await blogPostDocRef.update(updatedPost)
+    const blogPostDoc = await blogPostDocRef.get()
     return { id: blogPostDoc.id, ...blogPostDoc.data() } as BlogPost
   } catch (error) {
     console.error("Error in updateBlogPost:", error)
@@ -295,9 +306,8 @@ export async function uploadMedia(file: File): Promise<MediaItem | null> {
 
 export async function getMedia(): Promise<MediaItem[]> {
   try {
-    const mediaCol = collection(db, "media")
-    const q = query(mediaCol, orderBy("created_at", "desc"))
-    const mediaSnapshot = await getDocs(q)
+    const mediaCol = adminDb.collection("media")
+    const mediaSnapshot = await mediaCol.orderBy("created_at", "desc").get()
     const mediaList = mediaSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MediaItem))
     return mediaList
   } catch (error) {
