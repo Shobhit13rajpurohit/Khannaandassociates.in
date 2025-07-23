@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServiceById, updateService } from "@/lib/db"
+import { NextRequest, NextResponse } from "next/server";
+// 👇 Import 'deleteService' here
+import { getServiceById, updateService, deleteService } from "@/lib/db";
 
 // GET - Fetch service by ID
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -68,6 +69,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
     }
 
+    // This line will now work correctly
     const success = await deleteService(id);
     
     if (!success) {
