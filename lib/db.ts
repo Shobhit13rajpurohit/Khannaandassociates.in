@@ -39,16 +39,7 @@ export interface BlogPost {
   }
 }
 
-export interface MediaItem {
-  id: string
-  filename: string
-  original_name: string
-  file_type: string
-  file_size: number
-  url: string
-  alt_text?: string
-  created_at: Timestamp
-}
+
 
 export interface AdminUser {
   id: string
@@ -310,21 +301,125 @@ export async function updateBlogPost(id: string, post: Partial<BlogPost>): Promi
   }
 }
 
-// Media operations
-export async function uploadMedia(file: File): Promise<MediaItem | null> {
-  // This function will need to be updated to use Firebase Storage instead of Supabase Storage.
-  // For now, it will return null.
-  return null
+// Add these interfaces and functions to your existing db.ts file
+
+export interface TeamMember {
+  id: string
+  name: string
+  position: string
+  image: string
+  expertise: string
+  slug: string
+  bio: string
+  education: string[]
+  contact: {
+    email: string
+    phone: string
+  }
+  office?: string
+  status: "active" | "inactive"
+  created_at: Timestamp
+  updated_at: Timestamp
 }
 
-export async function getMedia(): Promise<MediaItem[]> {
+// Team operations
+export async function getTeamMembers(): Promise<TeamMember[]> {
   try {
-    const mediaCol = adminDb.collection("media")
-    const mediaSnapshot = await mediaCol.orderBy("created_at", "desc").get()
-    const mediaList = mediaSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MediaItem))
-    return mediaList
+    const teamCol = adminDb.collection("team_members")
+    const teamSnapshot = await teamCol.orderBy("created_at", "desc").get()
+    const teamList = teamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember))
+    return teamList
   } catch (error) {
-    console.error("Error in getMedia:", error)
+    console.error("Error fetching team members:", error)
     return []
   }
 }
+
+export async function getActiveTeamMembers(): Promise<TeamMember[]> {
+  try {
+    const teamCol = adminDb.collection("team_members")
+    const teamSnapshot = await teamCol.where("status", "==", "active").orderBy("created_at", "desc").get()
+    const teamList = teamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember))
+    return teamList
+  } catch (error) {
+    console.error("Error fetching active team members:", error)
+    return []
+  }
+}
+
+export async function getTeamMember(slug: string): Promise<TeamMember | null> {
+  try {
+    const teamCol = adminDb.collection("team_members")
+    const teamSnapshot = await teamCol.where("slug", "==", slug).get()
+    if (teamSnapshot.empty) {
+      return null
+    }
+    const teamDoc = teamSnapshot.docs[0]
+    return { id: teamDoc.id, ...teamDoc.data() } as TeamMember
+  } catch (error) {
+    console.error("Error in getTeamMember:", error)
+    return null
+  }
+}
+
+export async function getTeamMemberById(id: string): Promise<TeamMember | null> {
+  try {
+    const teamDocRef = adminDb.collection("team_members").doc(id)
+    const teamDoc = await teamDocRef.get()
+    if (!teamDoc.exists) {
+      return null
+    }
+    return { id: teamDoc.id, ...teamDoc.data() } as TeamMember
+  } catch (error) {
+    console.error("Error in getTeamMemberById:", error)
+    return null
+  }
+}
+
+export async function createTeamMember(
+  member: Omit<TeamMember, "id" | "created_at" | "updated_at">
+): Promise<TeamMember | null> {
+  try {
+    const teamCol = adminDb.collection("team_members")
+    const newMember = {
+      ...member,
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
+    }
+    const docRef = await teamCol.add(newMember)
+    return { id: docRef.id, ...newMember }
+  } catch (error) {
+    console.error("Error in createTeamMember:", error)
+    return null
+  }
+}
+
+export async function updateTeamMember(id: string, member: Partial<TeamMember>): Promise<TeamMember | null> {
+  try {
+    const teamDocRef = adminDb.collection("team_members").doc(id)
+    const updatedMember = {
+      ...member,
+      updated_at: Timestamp.now(),
+    }
+    await teamDocRef.update(updatedMember)
+    const teamDoc = await teamDocRef.get()
+    return { id: teamDoc.id, ...teamDoc.data() } as TeamMember
+  } catch (error) {
+    console.error("Error in updateTeamMember:", error)
+    return null
+  }
+}
+
+export async function deleteTeamMember(id: string): Promise<boolean> {
+  try {
+    const teamDocRef = adminDb.collection("team_members").doc(id)
+    await teamDocRef.delete()
+    return true
+  } catch (error) {
+    console.error("Error in deleteTeamMember:", error)
+    return false
+  }
+}
+
+
+

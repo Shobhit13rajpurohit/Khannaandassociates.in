@@ -34,15 +34,7 @@ const db = admin.firestore();
 async function createCollections() {
   console.log("Starting to create collections...");
 
-  // Create admin_users collection
-  const adminUsersRef = db.collection('admin_users');
-  await adminUsersRef.doc('admin-user-id').set({
-    email: 'admin@khannaandassociates.com',
-    name: 'Admin User',
-    role: 'admin',
-    created_at: new Date(),
-  });
-  console.log("-> 'admin_users' collection created.");
+  
 
   // Create services collection
   const servicesRef = db.collection('services');

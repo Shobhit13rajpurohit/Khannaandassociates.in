@@ -1,12 +1,7 @@
 // Current CMS Implementation Status
 
 export const CMS_STATUS = {
-  // ✅ WORKING - Basic functionality implemented
-  authentication: {
-    status: "WORKING",
-    features: ["JWT login", "Session management", "Role-based access"],
-    limitations: ["No password reset", "No user registration", "Basic security"],
-  },
+ 
 
   serviceManagement: {
     status: "WORKING",
@@ -21,11 +16,7 @@ export const CMS_STATUS = {
     limitations: ["No actual publishing", "No comment system", "No scheduling"],
   },
 
-  mediaLibrary: {
-    status: "MOCK",
-    features: ["UI interface only"],
-    limitations: ["No actual file upload", "No image processing", "No CDN integration"],
-  },
+ 
 
   // ❌ NOT IMPLEMENTED - Would need significant work
   missingFeatures: [

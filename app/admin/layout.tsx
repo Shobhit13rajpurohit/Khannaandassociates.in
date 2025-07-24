@@ -28,7 +28,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Team Members", path: "/admin/team" },
     { name: "Locations", path: "/admin/locations" },
    
-    { name: "Media Library", path: "/admin/media" },
+    
 
   ]
 

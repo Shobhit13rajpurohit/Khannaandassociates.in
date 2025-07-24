@@ -12,7 +12,7 @@ interface Stats {
   teamMembers: number
   locations: number
   blogPosts: number
-  mediaItems: number
+  
 }
 
 interface Activity {
@@ -29,7 +29,7 @@ export default function AdminDashboard() {
     teamMembers: 0,
     locations: 0,
     blogPosts: 0,
-    mediaItems: 0,
+    
   })
 
   const [recentActivity] = useState<Activity[]>([
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
           teamMembers: 8,
           locations: 8,
           blogPosts: 15,
-          mediaItems: 42,
+          
         })
       } catch (error) {
         console.error("Error fetching stats:", error)
@@ -167,14 +167,7 @@ export default function AdminDashboard() {
           value={stats.blogPosts}
         />
 
-        <StatCard
-          href="/admin/media"
-          icon={ImageIcon}
-          bgColor="bg-indigo-100"
-          iconColor="text-indigo-600"
-          label="Media Items"
-          value={stats.mediaItems}
-        />
+       
       </div>
 
       {/* Quick Actions */}
@@ -193,9 +186,7 @@ export default function AdminDashboard() {
           <Link href="/admin/team/new">
             <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Add Team Member</Button>
           </Link>
-          <Link href="/admin/media/upload">
-            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Upload Media</Button>
-          </Link>
+        
         </div>
       </div>
 

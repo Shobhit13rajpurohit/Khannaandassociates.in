@@ -7,7 +7,7 @@ interface TeamMemberDetail {
   name: string
   title: string
   image: string
-  bio: string
+  bio: string 
   expertise: string[]
   education: string[]
   contact: {
