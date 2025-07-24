@@ -26,11 +26,12 @@ if (!admin.apps.length) {
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
+    storageBucket: "shobhit-22354.firebasestorage.app",
   });
 }
 
 const adminAuth = admin.auth();
 const adminDb = admin.firestore();
-const adminStorage = getStorage;
+const adminStorage = () => getStorage(admin.app());
 
 export { app, db, auth, adminAuth, adminDb, adminStorage };

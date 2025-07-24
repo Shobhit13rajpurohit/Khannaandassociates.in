@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
+import { ImageUpload } from '@/components/ImageUpload';
 
 export default function EditServicePage({ params }: { params: { id: string } }) {
   const [formData, setFormData] = useState({
@@ -346,11 +347,10 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
                 <CardTitle>Featured Image</CardTitle>
               </CardHeader>
               <CardContent>
-                <Input
-                  value={formData.featured_image}
-                  onChange={(e) => setFormData({ ...formData, featured_image: e.target.value })}
-                  placeholder="Image URL"
-                />
+                <ImageUpload
+  value={formData.featured_image}
+  onChange={(url) => setFormData({ ...formData, featured_image: url })}
+/>
               </CardContent>
             </Card>
 
