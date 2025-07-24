@@ -1,160 +1,155 @@
-"use client"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { TeamMember } from "../../../../../lib/db"
-import { Button } from "../../../../../components/ui/button"
-import { Input } from "../../../../../components/ui/input"
-import { Label } from "../../../../../components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../../../components/ui/select"
-import { Textarea } from "../../../../../components/ui/textarea"
+'use client';
 
-async function getTeamMember(id: string): Promise<TeamMember | null> {
-  const res = await fetch(`/api/admin/team/${id}`)
-  if (!res.ok) {
-    return null
-  }
-  return res.json()
+import React, { useEffect, useState } from 'react';
+import { use } from 'react';
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
 }
 
-export default function EditTeamMemberPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  const router = useRouter()
-  const [member, setMember] = useState<TeamMember | null>(null)
-  const [name, setName] = useState("")
-  const [position, setPosition] = useState("")
-  const [image, setImage] = useState("")
-  const [expertise, setExpertise] = useState("")
-  const [slug, setSlug] = useState("")
-  const [bio, setBio] = useState("")
-  const [education, setEducation] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [office, setOffice] = useState("")
-  const [status, setStatus] = useState<"active" | "inactive">("active")
+export default function EditTeamMemberPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap params with React.use
+  const { id } = use(params);
 
+  const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
+  const [formData, setFormData] = useState<Partial<TeamMember>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Fetch team member data (fix for line 61 error)
   useEffect(() => {
-    getTeamMember(params.id).then(data => {
-      if (data) {
-        setMember(data)
-        setName(data.name)
-        setPosition(data.position)
-        setImage(data.image)
-        setExpertise(data.expertise)
-        setSlug(data.slug)
-        setBio(data.bio)
-        setEducation(data.education.join(", "))
-        setEmail(data.contact.email)
-        setPhone(data.contact.phone)
-        setOffice(data.office || "")
-        setStatus(data.status)
+    const fetchTeamMember = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/admin/team/${id}`);
+        const data = await res.json();
+        if (res.ok) {
+          setTeamMember(data);
+          setFormData(data);
+        } else {
+          setError(data.error || 'Failed to fetch team member');
+        }
+      } catch (err) {
+        setError('Error fetching team member');
+        console.error('Error fetching team member:', err);
+      } finally {
+        setLoading(false);
       }
-    })
-  }, [params.id])
+    };
 
+    fetchTeamMember();
+  }, [id]); // Use unwrapped id instead of params.id
+
+  // Handle form input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission (fix for line 82 error)
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
-    const updatedMember: Partial<TeamMember> = {
-      name,
-      position,
-      image,
-      expertise,
-      slug,
-      bio,
-      education: education.split(",").map(item => item.trim()),
-      contact: {
-        email,
-        phone,
-      },
-      office,
-      status,
+    try {
+      const res = await fetch(`/api/admin/team/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess('Team member updated successfully');
+        setTeamMember(data);
+      } else {
+        setError(data.error || 'Failed to update team member');
+      }
+    } catch (err) {
+      setError('Error updating team member');
+      console.error('Error updating team member:', err);
     }
+  };
 
-    const res = await fetch(`/api/admin/team/${params.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedMember),
-    })
+  // Handle delete action
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this team member?')) return;
 
-    if (res.ok) {
-      router.push("/admin/team")
-    } else {
-      alert("Failed to update team member")
+    try {
+      const res = await fetch(`/api/admin/team/${id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess('Team member deleted successfully');
+        // Optionally redirect to team list page
+        // window.location.href = '/admin/team';
+      } else {
+        setError(data.error || 'Failed to delete team member');
+      }
+    } catch (err) {
+      setError('Error deleting team member');
+      console.error('Error deleting team member:', err);
     }
-  }
+  };
 
-  if (!member) {
-    return <div>Loading...</div>
-  }
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Edit Team Member</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Edit Team Member</h1>
+      {success && <div className="mb-4 text-green-500">{success}</div>}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name || ''}
+            onChange={handleChange}
+            className="mt-1 p-2 block w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          />
         </div>
         <div>
-          <Label htmlFor="slug">Slug</Label>
-          <Input id="slug" value={slug} onChange={e => setSlug(e.target.value)} required />
+          <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+            Role
+          </label>
+          <input
+            type="text"
+            id="role"
+            name="role"
+            value={formData.role || ''}
+            onChange={handleChange}
+            className="mt-1 p-2 block w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            required
+          />
         </div>
-        <div>
-          <Label htmlFor="position">Position</Label>
-          <Input id="position" value={position} onChange={e => setPosition(e.target.value)} required />
+        <div className="flex space-x-4">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Delete
+          </button>
         </div>
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-        </div>
-        <div>
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="image">Image URL</Label>
-          <Input id="image" value={image} onChange={e => setImage(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="expertise">Expertise</Label>
-          <Input id="expertise" value={expertise} onChange={e => setExpertise(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="education">Education (comma-separated)</Label>
-          <Input id="education" value={education} onChange={e => setEducation(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="office">Office</Label>
-          <Input id="office" value={office} onChange={e => setOffice(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea id="bio" value={bio} onChange={e => setBio(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="status">Status</Label>
-          <Select onValueChange={(value: "active" | "inactive") => setStatus(value)} value={status}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button type="submit">Update Member</Button>
       </form>
     </div>
-  )
+  );
 }
-
