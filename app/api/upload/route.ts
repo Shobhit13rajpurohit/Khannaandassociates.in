@@ -1,46 +1,36 @@
-import { NextResponse } from "next/server"
-import { adminStorage } from "@/lib/firebase"
+import { NextResponse } from 'next/server';
+import { adminStorage } from '../../../lib/firebase';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData()
-    const file = formData.get("file") as File
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json({ message: "No file found" }, { status: 400 })
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ message: "File must be an image" }, { status: 400 })
-    }
+    const bucket = adminStorage.bucket();
+    const filename = `${uuidv4()}-${file.name}`;
+    const fileRef = bucket.file(`team-images/${filename}`);
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ message: "File size must be less than 5MB" }, { status: 400 })
-    }
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Use the correct bucket name for new Firebase Storage format
-    const bucket = adminStorage().bucket("shobhit-22354.firebasestorage.app")
-    const fileName = `services/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-    const fileRef = bucket.file(fileName)
-
-    const fileBuffer = await file.arrayBuffer()
-    await fileRef.save(Buffer.from(fileBuffer), {
+    await fileRef.save(fileBuffer, {
       metadata: {
         contentType: file.type,
       },
-    })
+    });
 
-    // Make the file publicly accessible
-    await fileRef.makePublic()
+    const [url] = await fileRef.getSignedUrl({
+      action: 'read',
+      expires: '03-09-2491', // A long time in the future
+    });
 
-    // For new Firebase Storage, use the correct public URL format
-    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/shobhit-22354.firebasestorage.app/o/${encodeURIComponent(fileName)}?alt=media`
-
-    return NextResponse.json({ url: publicUrl })
+    return NextResponse.json({ url });
   } catch (error) {
-    console.error("API Error uploading file:", error)
-    return NextResponse.json({ message: "Error uploading file" }, { status: 500 })
+    console.error('Error uploading image:', error);
+    return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
   }
 }

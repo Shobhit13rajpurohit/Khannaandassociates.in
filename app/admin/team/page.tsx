@@ -1,8 +1,8 @@
-"use client"
-import { useState, useEffect } from "react"
+'use client'
+import { useEffect, useState } from "react"
+import Link from "next/link"
 import { TeamMember } from "../../../lib/db"
 import { Button } from "../../../components/ui/button"
-import Link from "next/link"
 import {
   Table,
   TableBody,
@@ -11,34 +11,33 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table"
+import Image from "next/image"
 
-async function getTeamMembers(): Promise<TeamMember[]> {
-  const res = await fetch("/api/admin/team")
-  if (!res.ok) {
-    throw new Error("Failed to fetch team members")
-  }
-  return res.json()
-}
-
-export default function TeamPage() {
+export default function TeamListPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getTeamMembers().then(setTeamMembers)
-  }, [])
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this team member?")) {
-      const res = await fetch(`/api/admin/team/${id}`, {
-        method: "DELETE",
-      })
-      if (res.ok) {
-        setTeamMembers(teamMembers.filter(member => member.id !== id))
-      } else {
-        alert("Failed to delete team member")
+    const fetchTeamMembers = async () => {
+      try {
+        const res = await fetch("/api/admin/team")
+        if (!res.ok) {
+          throw new Error("Failed to fetch team members")
+        }
+        const data = await res.json()
+        setTeamMembers(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
       }
     }
-  }
+    fetchTeamMembers()
+  }, [])
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
 
   return (
     <div className="container mx-auto py-10">
@@ -51,6 +50,7 @@ export default function TeamPage() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>Status</TableHead>
@@ -60,19 +60,21 @@ export default function TeamPage() {
         <TableBody>
           {teamMembers.map(member => (
             <TableRow key={member.id}>
+              <TableCell>
+                <Image
+                  src={member.image || "/placeholder-user.jpg"}
+                  alt={member.name}
+                  width={50}
+                  height={50}
+                  className="rounded-full"
+                />
+              </TableCell>
               <TableCell>{member.name}</TableCell>
               <TableCell>{member.position}</TableCell>
               <TableCell>{member.status}</TableCell>
               <TableCell>
-                <Button asChild variant="outline" size="sm" className="mr-2">
+                <Button asChild variant="outline">
                   <Link href={`/admin/team/edit/${member.id}`}>Edit</Link>
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(member.id)}
-                >
-                  Delete
                 </Button>
               </TableCell>
             </TableRow>

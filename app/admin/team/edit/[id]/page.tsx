@@ -2,33 +2,53 @@
 
 import React, { useEffect, useState } from 'react';
 import { use } from 'react';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-}
+import { TeamMember } from '../../../../../lib/db';
+import { ImageUpload } from '../../../../../components/ImageUpload';
+import { Button } from '../../../../../components/ui/button';
+import { Input } from '../../../../../components/ui/input';
+import { Label } from '../../../../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../../components/ui/select';
+import { Textarea } from '../../../../../components/ui/textarea';
+import { useRouter } from 'next/navigation';
 
 export default function EditTeamMemberPage({ params }: { params: Promise<{ id: string }> }) {
-  // Unwrap params with React.use
   const { id } = use(params);
+  const router = useRouter();
 
-  const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
-  const [formData, setFormData] = useState<Partial<TeamMember>>({});
+  const [name, setName] = useState('');
+  const [position, setPosition] = useState('');
+  const [image, setImage] = useState('');
+  const [expertise, setExpertise] = useState('');
+  const [slug, setSlug] = useState('');
+  const [bio, setBio] = useState('');
+  const [education, setEducation] = useState<string[]>([]);
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [office, setOffice] = useState('');
+  const [status, setStatus] = useState<'active' | 'inactive'>('inactive');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Fetch team member data (fix for line 61 error)
   useEffect(() => {
     const fetchTeamMember = async () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/admin/team/${id}`);
-        const data = await res.json();
+        const data: TeamMember = await res.json();
         if (res.ok) {
-          setTeamMember(data);
-          setFormData(data);
+          setName(data.name);
+          setPosition(data.position);
+          setImage(data.image);
+          setExpertise(data.expertise);
+          setSlug(data.slug);
+          setBio(data.bio);
+          setEducation(data.education);
+          setEmail(data.contact.email);
+          setPhone(data.contact.phone);
+          setOffice(data.office || '');
+          setStatus(data.status);
         } else {
           setError(data.error || 'Failed to fetch team member');
         }
@@ -41,31 +61,55 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
     };
 
     fetchTeamMember();
-  }, [id]); // Use unwrapped id instead of params.id
+  }, [id]);
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleEducationChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const newEducation = [...education];
+    newEducation[index] = e.target.value;
+    setEducation(newEducation);
   };
 
-  // Handle form submission (fix for line 82 error)
+  const addEducationField = () => {
+    setEducation([...education, '']);
+  };
+
+  const removeEducationField = (index: number) => {
+    const newEducation = [...education];
+    newEducation.splice(index, 1);
+    setEducation(newEducation);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
+    const updatedMember: Partial<TeamMember> = {
+      name,
+      position,
+      image,
+      expertise,
+      slug,
+      bio,
+      education,
+      contact: {
+        email,
+        phone,
+      },
+      office,
+      status,
+    };
+
     try {
       const res = await fetch(`/api/admin/team/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(updatedMember),
       });
 
       const data = await res.json();
       if (res.ok) {
         setSuccess('Team member updated successfully');
-        setTeamMember(data);
       } else {
         setError(data.error || 'Failed to update team member');
       }
@@ -75,7 +119,6 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  // Handle delete action
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this team member?')) return;
 
@@ -84,12 +127,11 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
         method: 'DELETE',
       });
 
-      const data = await res.json();
       if (res.ok) {
         setSuccess('Team member deleted successfully');
-        // Optionally redirect to team list page
-        // window.location.href = '/admin/team';
+        router.push('/admin/team');
       } else {
+        const data = await res.json();
         setError(data.error || 'Failed to delete team member');
       }
     } catch (err) {
@@ -102,52 +144,71 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
   if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Team Member</h1>
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Edit Team Member</h1>
       {success && <div className="mb-4 text-green-500">{success}</div>}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name || ''}
-            onChange={handleChange}
-            className="mt-1 p-2 block w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            required
-          />
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
         <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-            Role
-          </label>
-          <input
-            type="text"
-            id="role"
-            name="role"
-            value={formData.role || ''}
-            onChange={handleChange}
-            className="mt-1 p-2 block w-full border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            required
-          />
+          <Label htmlFor="slug">Slug</Label>
+          <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="position">Position</Label>
+          <Input id="position" value={position} onChange={(e) => setPosition(e.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="phone">Phone</Label>
+          <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="image">Image</Label>
+          <ImageUpload value={image} onChange={url => setImage(url)} />
+        </div>
+        <div>
+          <Label htmlFor="expertise">Expertise</Label>
+          <Input id="expertise" value={expertise} onChange={(e) => setExpertise(e.target.value)} />
+        </div>
+        <div>
+          <Label>Education</Label>
+          {education.map((edu, index) => (
+            <div key={index} className="flex items-center gap-2 mb-2">
+              <Input value={edu} onChange={(e) => handleEducationChange(e, index)} />
+              <Button type="button" onClick={() => removeEducationField(index)} variant="destructive">-</Button>
+            </div>
+          ))}
+          <Button type="button" onClick={addEducationField}>+</Button>
+        </div>
+        <div>
+          <Label htmlFor="office">Office</Label>
+          <Input id="office" value={office} onChange={(e) => setOffice(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} />
+        </div>
+        <div>
+          <Label htmlFor="status">Status</Label>
+          <Select onValueChange={(value: "active" | "inactive") => setStatus(value)} value={status}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex space-x-4">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Delete
-          </button>
+          <Button type="submit">Save Changes</Button>
+          <Button type="button" onClick={handleDelete} variant="destructive">Delete</Button>
         </div>
       </form>
     </div>

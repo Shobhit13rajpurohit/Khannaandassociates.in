@@ -3,12 +3,12 @@ import Link from "next/link"
 
 interface TeamMemberProps {
   name: string
-  title: string
+  position: string
   image: string
   slug: string
 }
 
-export default function TeamMember({ name, title, image, slug }: TeamMemberProps) {
+export default function TeamMember({ name, position, image, slug }: TeamMemberProps) {
   return (
     <Link href={`/firm-profile/team/${slug}`} className="block">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -17,7 +17,7 @@ export default function TeamMember({ name, title, image, slug }: TeamMemberProps
           </div>
           <div className="p-4 text-center">
             <h3 className="text-xl font-semibold text-[#1a3c61]">{name}</h3>
-          <p className="text-gray-600 text-sm">{title}</p>
+          <p className="text-gray-600 text-sm">{position}</p>
         </div>
       </div>
     </Link>

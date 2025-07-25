@@ -44,7 +44,7 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                   <p className="text-gray-700">{location.address}</p>
                 </div>
                 <div className="mb-4">
-                  <h3 className="font-semibold text-[#1a3c61] mb-2">Contact</h4>
+                  <h3 className="font-semibold text-[#1a3c61] mb-2">Contact</h3>
                   <p className="text-gray-700">{location.contact_info}</p>
                 </div>
               </div>

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "../../../../components/ui/select"
 import { Textarea } from "../../../../components/ui/textarea"
+import { ImageUpload } from '@/components/ui/image-upload';
 
 export default function NewTeamMemberPage() {
   const router = useRouter()
@@ -85,8 +86,8 @@ export default function NewTeamMemberPage() {
           <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} />
         </div>
         <div>
-          <Label htmlFor="image">Image URL</Label>
-          <Input id="image" value={image} onChange={e => setImage(e.target.value)} />
+          <Label htmlFor="image">Image</Label>
+          <ImageUpload value={image} onChange={url => setImage(url)} />
         </div>
         <div>
           <Label htmlFor="expertise">Expertise</Label>
