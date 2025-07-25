@@ -2,52 +2,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import IndiaPresence from "@/components/india-presence"
+import { getLocations } from "@/lib/db"
 
-export default function LocationsPage() {
-  const locations = [
-    {
-      name: "Delhi",
-      image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070",
-      description: "Our main office, serving clients across North India.",
-      slug: "delhi",
-    },
-    {
-      name: "Mumbai",
-      image: "https://images.unsplash.com/photo-1566552881560-0be862a7c445?q=80&w=2070",
-      description: "Financial hub office, specializing in corporate and banking law.",
-      slug: "mumbai",
-    },
-    {
-      name: "Bangalore",
-      image: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=2148",
-      description: "Tech city presence, focusing on IT and intellectual property law.",
-      slug: "bangalore",
-    },
-    {
-      name: "Chennai",
-      image: "https://images.unsplash.com/photo-1603262531080-9f24006f219f?q=80&w=2070",
-      description: "Southern India office, strong in real estate and maritime law.",
-      slug: "chennai",
-    },
-    {
-      name: "Dehradun",
-      image: "https://images.unsplash.com/photo-1596727147130-e2014f0f8e5d?q=80&w=2070",
-      description: "Himalayan foothills office, serving local and regional clients.",
-      slug: "dehradun",
-    },
-    {
-      name: "Jaipur",
-      image: "https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070",
-      description: "Pink City office, focusing on civil and family law.",
-      slug: "jaipur",
-    },
-    {
-      name: "New York",
-      image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=2070",
-      description: "International presence, assisting with cross-border transactions.",
-      slug: "new-york",
-    },
-  ]
+export default async function LocationsPage() {
+  const locations = await getLocations()
 
   return (
     <div className="min-h-screen">
@@ -74,7 +32,7 @@ export default function LocationsPage() {
                 <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                   <div className="relative h-48 w-full">
                     <Image
-                      src={location.image || "/placeholder.svg"}
+                      src={location.map_link || "/placeholder.svg"}
                       alt={location.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -85,7 +43,7 @@ export default function LocationsPage() {
                     </div>
                   </div>
                   <div className="p-4">
-                    <p className="text-gray-700">{location.description}</p>
+                    <p className="text-gray-700">{location.address}</p>
                   </div>
                 </div>
               </Link>

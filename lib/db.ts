@@ -421,5 +421,105 @@ export async function deleteTeamMember(id: string): Promise<boolean> {
   }
 }
 
+export interface Location {
+  id: string
+  name: string
+  address: string
+  city: string
+  country: string
+  contact_info: string
+  map_link: string
+  created_at: Timestamp
+  updated_at: Timestamp
+}
 
+// Location operations
+export async function getLocations(): Promise<Location[]> {
+  try {
+    const locationsCol = adminDb.collection("locations")
+    const locationsSnapshot = await locationsCol.orderBy("created_at", "desc").get()
+    const locationsList = locationsSnapshot.docs.map(
+      doc => ({ id: doc.id, ...doc.data() } as Location)
+    )
+    return locationsList
+  } catch (error) {
+    console.error("Error fetching locations:", error)
+    return []
+  }
+}
 
+export async function getLocationById(id: string): Promise<Location | null> {
+  try {
+    const locationDocRef = adminDb.collection("locations").doc(id)
+    const locationDoc = await locationDocRef.get()
+    if (!locationDoc.exists) {
+      return null
+    }
+    return { id: locationDoc.id, ...locationDoc.data() } as Location
+  } catch (error) {
+    console.error("Error in getLocationById:", error)
+    return null
+  }
+}
+
+export async function createLocation(
+  location: Omit<Location, "id" | "created_at" | "updated_at">
+): Promise<Location | null> {
+  try {
+    const locationsCol = adminDb.collection("locations")
+    const newLocation = {
+      ...location,
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
+    }
+    const docRef = await locationsCol.add(newLocation)
+    return { id: docRef.id, ...newLocation }
+  } catch (error) {
+    console.error("Error in createLocation:", error)
+    return null
+  }
+}
+
+export async function updateLocation(
+  id: string,
+  location: Partial<Location>
+): Promise<Location | null> {
+  try {
+    const locationDocRef = adminDb.collection("locations").doc(id)
+    const updatedLocation = {
+      ...location,
+      updated_at: Timestamp.now(),
+    }
+    await locationDocRef.update(updatedLocation)
+    const locationDoc = await locationDocRef.get()
+    return { id: locationDoc.id, ...locationDoc.data() } as Location
+  } catch (error) {
+    console.error("Error in updateLocation:", error)
+    return null
+  }
+}
+
+export async function deleteLocation(id: string): Promise<boolean> {
+  try {
+    const locationDocRef = adminDb.collection("locations").doc(id)
+    await locationDocRef.delete()
+    return true
+  } catch (error) {
+    console.error("Error in deleteLocation:", error)
+    return false
+  }
+}
+export async function getLocationBySlug(slug: string): Promise<Location | null> {
+  try {
+    const locationsCol = adminDb.collection("locations")
+    const locationsSnapshot = await locationsCol.where("slug", "==", slug).get()
+    if (locationsSnapshot.empty) {
+      return null
+    }
+    const locationDoc = locationsSnapshot.docs[0]
+    return { id: locationDoc.id, ...locationDoc.data() } as Location
+  } catch (error) {
+    console.error("Error in getLocationBySlug:", error)
+    return null
+  }
+}
