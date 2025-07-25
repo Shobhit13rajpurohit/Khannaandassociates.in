@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ImageUpload } from "@/components/ImageUpload"
 
 interface Location {
   name: string
@@ -14,6 +15,7 @@ interface Location {
   country: string
   contact_info: string
   map_link: string
+  imageUrl: string
 }
 
 export default function EditLocationPage() {
@@ -79,6 +81,12 @@ export default function EditLocationPage() {
     }
   }
 
+  const handleImageChange = (url: string) => {
+    if (location) {
+      setLocation({ ...location, imageUrl: url })
+    }
+  }
+
   if (loading && !location) {
     return <div>Loading...</div>
   }
@@ -127,6 +135,13 @@ export default function EditLocationPage() {
             <div className="grid gap-2">
               <Label htmlFor="map_link">Map Link</Label>
               <Input id="map_link" value={location.map_link} onChange={handleChange} required />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="image">Image</Label>
+              <ImageUpload
+                value={location.imageUrl}
+                onChange={handleImageChange}
+              />
             </div>
             {error && <p className="text-red-500">{error}</p>}
             <Button type="submit" disabled={loading}>

@@ -424,11 +424,13 @@ export async function deleteTeamMember(id: string): Promise<boolean> {
 export interface Location {
   id: string
   name: string
+  slug: string
   address: string
   city: string
   country: string
   contact_info: string
   map_link: string
+  imageUrl?: string
   created_at: Timestamp
   updated_at: Timestamp
 }
@@ -463,12 +465,14 @@ export async function getLocationById(id: string): Promise<Location | null> {
 }
 
 export async function createLocation(
-  location: Omit<Location, "id" | "created_at" | "updated_at">
+  location: Omit<Location, "id" | "created_at" | "updated_at" | "slug">
 ): Promise<Location | null> {
   try {
     const locationsCol = adminDb.collection("locations")
+    const slug = location.name.toLowerCase().replace(/\s+/g, "-")
     const newLocation = {
       ...location,
+      slug,
       created_at: Timestamp.now(),
       updated_at: Timestamp.now(),
     }
