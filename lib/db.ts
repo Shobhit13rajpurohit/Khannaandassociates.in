@@ -490,10 +490,15 @@ export async function updateLocation(
 ): Promise<Location | null> {
   try {
     const locationDocRef = adminDb.collection("locations").doc(id)
-    const updatedLocation = {
+    const updatedLocation: Partial<Location> & { updated_at: Timestamp } = {
       ...location,
       updated_at: Timestamp.now(),
     }
+
+    if (location.name) {
+      updatedLocation.slug = location.name.toLowerCase().replace(/\s+/g, "-")
+    }
+
     await locationDocRef.update(updatedLocation)
     const locationDoc = await locationDocRef.get()
     return { id: locationDoc.id, ...locationDoc.data() } as Location

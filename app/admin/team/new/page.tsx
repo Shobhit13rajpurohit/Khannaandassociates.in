@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "../../../../components/ui/select"
 import { Textarea } from "../../../../components/ui/textarea"
-import { ImageUpload } from '@/components/ui/image-upload';
+import { ImageUpload } from '../../../../components/ImageUpload'
 
 export default function NewTeamMemberPage() {
   const router = useRouter()

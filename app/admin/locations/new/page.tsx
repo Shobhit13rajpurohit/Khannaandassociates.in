@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ImageUpload } from "@/components/ImageUpload"
 
 export default function NewLocationPage() {
   const router = useRouter()
@@ -15,6 +16,7 @@ export default function NewLocationPage() {
   const [country, setCountry] = useState("")
   const [contactInfo, setContactInfo] = useState("")
   const [mapLink, setMapLink] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -34,6 +36,7 @@ export default function NewLocationPage() {
           country,
           contact_info: contactInfo,
           map_link: mapLink,
+          imageUrl,
         }),
       })
 
@@ -109,6 +112,13 @@ export default function NewLocationPage() {
                 value={mapLink}
                 onChange={e => setMapLink(e.target.value)}
                 required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="image">Image</Label>
+              <ImageUpload
+                value={imageUrl}
+                onChange={setImageUrl}
               />
             </div>
             {error && <p className="text-red-500">{error}</p>}
