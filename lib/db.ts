@@ -25,12 +25,20 @@ export interface BlogPost {
   content: string
   excerpt: string
   featured_image?: string
+  featured_image_alt?: string  // NEW
   category: string
   tags: string[]
   status: "published" | "draft"
   author_id: string
   meta_title?: string
   meta_description?: string
+  focus_keyword?: string       // NEW
+  canonical_url?: string       // NEW
+  og_title?: string           // NEW
+  og_description?: string     // NEW
+  twitter_title?: string      // NEW
+  twitter_description?: string // NEW
+  seo_score?: number          // NEW
   created_at: Timestamp
   updated_at: Timestamp
   author?: {

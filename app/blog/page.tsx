@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Calendar, User, Tag } from "lucide-react"
 import { getPublishedBlogPosts } from "@/lib/db"
+import { format } from "date-fns"
 
 export default async function BlogPage() {
   const blogPosts = await getPublishedBlogPosts()
@@ -50,7 +51,7 @@ export default async function BlogPage() {
                   <div className="p-6">
                     <div className="flex items-center text-sm text-gray-500 mb-3">
                       <Calendar className="h-4 w-4 mr-1" />
-                      <span className="mr-4">{new Date(post.created_at).toLocaleDateString()}</span>
+                      <span className="mr-4">{format(post.created_at.toDate(), "MMMM dd, yyyy")}</span>
                       <User className="h-4 w-4 mr-1" />
                       <span>{post.author?.name || "Admin"}</span>
                     </div>
