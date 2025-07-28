@@ -1,112 +1,133 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, ImageIcon, Tag, LinkIcon, Save, Upload, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Calendar,
+  ImageIcon,
+  Tag,
+  LinkIcon,
+  Save,
+  Upload,
+  ArrowLeft,
+} from "lucide-react";
+import Link from "next/link";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export default function BlogEditorPage() {
-  const router = useRouter()
-  const params = useParams()
-  const isEditing = params?.id && params.id !== 'new'
-  const postId = isEditing ? params.id as string : null
+  const router = useRouter();
+  const params = useParams();
+  const isEditing = params?.id && params.id !== "new";
+  const postId = isEditing ? (params.id as string) : null;
 
-  const [title, setTitle] = useState("")
-  const [slug, setSlug] = useState("")
-  const [metaDescription, setMetaDescription] = useState("")
-  const [metaKeywords, setMetaKeywords] = useState("")
-  const [content, setContent] = useState("")
-  const [category, setCategory] = useState("")
-  const [tags, setTags] = useState("")
-  const [featuredImage, setFeaturedImage] = useState("")
-  const [featuredImagePreview, setFeaturedImagePreview] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
+  const [metaKeywords, setMetaKeywords] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState("");
+  const [featuredImage, setFeaturedImage] = useState("");
+  const [featuredImagePreview, setFeaturedImagePreview] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isEditing && postId) {
-      fetchPost(postId)
+      fetchPost(postId);
     }
-  }, [isEditing, postId])
+  }, [isEditing, postId]);
 
   const fetchPost = async (id: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch(`/api/admin/blog`)
+      const response = await fetch(`/api/admin/blog`);
       if (response.ok) {
-        const posts = await response.json()
-        const post = posts.find((p: any) => p.id === id)
+        const posts = await response.json();
+        const post = posts.find((p: any) => p.id === id);
         if (post) {
-          setTitle(post.title)
-          setSlug(post.slug)
-          setContent(post.content)
-          setCategory(post.category)
-          setTags(post.tags.join(", "))
-          setMetaDescription(post.meta_description || "")
-          setFeaturedImage(post.featured_image || "")
-          setFeaturedImagePreview(post.featured_image || "")
+          setTitle(post.title);
+          setSlug(post.slug);
+          setContent(post.content);
+          setCategory(post.category);
+          setTags(post.tags.join(", "));
+          setMetaDescription(post.meta_description || "");
+          setFeaturedImage(post.featured_image || "");
+          setFeaturedImagePreview(post.featured_image || "");
         }
       }
     } catch (error) {
-      console.error("Error fetching post:", error)
+      console.error("Error fetching post:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+  const insertImage = () => {
+    // Create a temporary ImageUpload for content images
+    const imageUrl = prompt("Enter image URL or drag and drop an image:");
+    const altText = prompt("Enter alt text:");
 
+    if (imageUrl && altText) {
+      const imageHtml = `<img src="${imageUrl}" alt="${altText}" class="rounded-lg my-4 max-w-full" />`;
+      setContent(content + imageHtml);
+    }
+  };
   // Generate slug from title
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
       .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-  }
+      .replace(/-+/g, "-");
+  };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value
-    setTitle(newTitle)
+    const newTitle = e.target.value;
+    setTitle(newTitle);
     if (!isEditing) {
-      setSlug(generateSlug(newTitle))
+      setSlug(generateSlug(newTitle));
     }
-  }
+  };
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value
-    setFeaturedImage(url)
-    setFeaturedImagePreview(url)
-  }
+    const url = e.target.value;
+    setFeaturedImage(url);
+    setFeaturedImagePreview(url);
+  };
 
   const handleSave = async (status: "draft" | "published") => {
     if (!title || !content) {
-      alert("Please fill in title and content")
-      return
+      alert("Please fill in title and content");
+      return;
     }
 
-    setSaving(true)
+    setSaving(true);
     try {
       const postData = {
         title,
         slug,
         content,
-        excerpt: content.replace(/<[^>]*>/g, '').substring(0, 150),
+        excerpt: content.replace(/<[^>]*>/g, "").substring(0, 150),
         category,
-        tags: tags.split(",").map(tag => tag.trim()).filter(tag => tag),
+        tags: tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag),
         status,
         meta_title: title,
         meta_description: metaDescription,
         featured_image: featuredImage,
         author_id: "admin",
-      }
+      };
 
-      const url = isEditing ? `/api/admin/blog/${postId}` : "/api/admin/blog"
-      const method = isEditing ? "PUT" : "POST"
+      const url = isEditing ? `/api/admin/blog/${postId}` : "/api/admin/blog";
+      const method = isEditing ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -114,52 +135,46 @@ export default function BlogEditorPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(postData),
-      })
+      });
 
       if (response.ok) {
-        alert(`Blog post ${isEditing ? 'updated' : 'created'} successfully!`)
-        router.push("/blog/admin")
+        alert(`Blog post ${isEditing ? "updated" : "created"} successfully!`);
+        router.push("/blog/admin");
       } else {
-        const error = await response.json()
-        alert(`Failed to ${isEditing ? 'update' : 'create'} blog post: ${error.message}`)
+        const error = await response.json();
+        alert(
+          `Failed to ${isEditing ? "update" : "create"} blog post: ${
+            error.message
+          }`
+        );
       }
     } catch (error) {
-      console.error("Error saving post:", error)
-      alert(`Failed to ${isEditing ? 'update' : 'create'} blog post`)
+      console.error("Error saving post:", error);
+      alert(`Failed to ${isEditing ? "update" : "create"} blog post`);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  const handleSaveDraft = () => handleSave("draft")
-  const handlePublish = () => handleSave("published")
+  const handleSaveDraft = () => handleSave("draft");
+  const handlePublish = () => handleSave("published");
 
   const insertLink = () => {
-    const linkText = prompt("Enter link text:")
-    const linkUrl = prompt("Enter URL:")
+    const linkText = prompt("Enter link text:");
+    const linkUrl = prompt("Enter URL:");
 
     if (linkText && linkUrl) {
-      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`
-      setContent(content + linkHtml)
+      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+      setContent(content + linkHtml);
     }
-  }
-
-  const insertImage = () => {
-    const imageUrl = prompt("Enter image URL:")
-    const altText = prompt("Enter alt text:")
-
-    if (imageUrl && altText) {
-      const imageHtml = `<img src="${imageUrl}" alt="${altText}" class="rounded-lg my-4 max-w-full" />`
-      setContent(content + imageHtml)
-    }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1a3c61]"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -174,24 +189,24 @@ export default function BlogEditorPage() {
               </Button>
             </Link>
             <h1 className="text-3xl font-bold text-[#1a3c61]">
-              {isEditing ? 'Edit Blog Post' : 'Create New Blog Post'}
+              {isEditing ? "Edit Blog Post" : "Create New Blog Post"}
             </h1>
           </div>
           <div className="flex space-x-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleSaveDraft}
               disabled={saving}
             >
-              <Save className="mr-2 h-4 w-4" /> 
-              {saving ? 'Saving...' : 'Save Draft'}
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Saving..." : "Save Draft"}
             </Button>
-            <Button 
-              className="bg-[#4BB4E6] hover:bg-[#3a9fd1]" 
+            <Button
+              className="bg-[#4BB4E6] hover:bg-[#3a9fd1]"
               onClick={handlePublish}
               disabled={saving}
             >
-              {saving ? 'Publishing...' : 'Publish'}
+              {saving ? "Publishing..." : "Publish"}
             </Button>
           </div>
         </div>
@@ -238,25 +253,17 @@ export default function BlogEditorPage() {
 
                 {/* Featured Image URL */}
                 <div>
-                  <Label htmlFor="featuredImageUrl" className="text-lg font-medium">
-                    Featured Image URL
+                  <Label
+                    htmlFor="featuredImage"
+                    className="text-lg font-medium"
+                  >
+                    Featured Image
                   </Label>
-                  <Input
-                    id="featuredImageUrl"
+                  <ImageUpload
                     value={featuredImage}
-                    onChange={handleImageUrlChange}
-                    placeholder="https://example.com/image.jpg"
+                    onChange={setFeaturedImage}
                     className="mt-1"
                   />
-                  {featuredImagePreview && (
-                    <div className="mt-4 relative w-64 h-40">
-                      <img
-                        src={featuredImagePreview}
-                        alt="Featured image preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* Category */}
@@ -274,7 +281,9 @@ export default function BlogEditorPage() {
                     <option value="">Select a category</option>
                     <option value="corporate-law">Corporate Law</option>
                     <option value="real-estate-law">Real Estate Law</option>
-                    <option value="intellectual-property">Intellectual Property</option>
+                    <option value="intellectual-property">
+                      Intellectual Property
+                    </option>
                     <option value="family-law">Family Law</option>
                     <option value="labour-law">Labour Law</option>
                     <option value="cyber-law">Cyber Law</option>
@@ -304,10 +313,20 @@ export default function BlogEditorPage() {
                   </Label>
                   <div className="mt-1 border border-gray-300 rounded-lg overflow-hidden">
                     <div className="bg-gray-50 p-2 border-b border-gray-300 flex space-x-2">
-                      <Button type="button" variant="outline" size="sm" onClick={insertLink}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={insertLink}
+                      >
                         <LinkIcon className="h-4 w-4" />
                       </Button>
-                      <Button type="button" variant="outline" size="sm" onClick={insertImage}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={insertImage}
+                      >
                         <ImageIcon className="h-4 w-4" />
                       </Button>
                     </div>
@@ -343,7 +362,10 @@ export default function BlogEditorPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="metaDescription" className="text-lg font-medium">
+                  <Label
+                    htmlFor="metaDescription"
+                    className="text-lg font-medium"
+                  >
                     Meta Description
                   </Label>
                   <Textarea
@@ -354,16 +376,22 @@ export default function BlogEditorPage() {
                     className="mt-1"
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    {metaDescription.length} characters (Recommended: 150-160 characters)
+                    {metaDescription.length} characters (Recommended: 150-160
+                    characters)
                   </p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <h3 className="font-medium text-lg mb-2">Google Search Preview</h3>
+                  <h3 className="font-medium text-lg mb-2">
+                    Google Search Preview
+                  </h3>
                   <div className="bg-white p-4 rounded border border-gray-300">
-                    <p className="text-[#1a0dab] text-xl truncate">{title || "Post Title"}</p>
+                    <p className="text-[#1a0dab] text-xl truncate">
+                      {title || "Post Title"}
+                    </p>
                     <p className="text-green-700 text-sm">
-                      https://www.khannaandassociates.com/blog/{slug || "post-slug"}
+                      https://www.khannaandassociates.com/blog/
+                      {slug || "post-slug"}
                     </p>
                     <p className="text-gray-600 text-sm line-clamp-2">
                       {metaDescription ||
@@ -376,11 +404,15 @@ export default function BlogEditorPage() {
 
             <TabsContent value="preview">
               <div className="border border-gray-300 rounded-lg p-6">
-                <h1 className="text-3xl font-bold text-[#1a3c61] mb-4">{title || "Post Title"}</h1>
+                <h1 className="text-3xl font-bold text-[#1a3c61] mb-4">
+                  {title || "Post Title"}
+                </h1>
 
                 <div className="flex items-center text-sm text-gray-500 mb-6">
                   <Calendar className="h-4 w-4 mr-1" />
-                  <span className="mr-4">{new Date().toLocaleDateString()}</span>
+                  <span className="mr-4">
+                    {new Date().toLocaleDateString()}
+                  </span>
                   <Tag className="h-4 w-4 mr-1" />
                   <span>{category || "Category"}</span>
                 </div>
@@ -397,7 +429,11 @@ export default function BlogEditorPage() {
 
                 <div
                   className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: content || "<p>Your blog post content will appear here.</p>" }}
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      content ||
+                      "<p>Your blog post content will appear here.</p>",
+                  }}
                 ></div>
 
                 {tags && (
@@ -406,7 +442,10 @@ export default function BlogEditorPage() {
                       <Tag className="h-4 w-4 text-[#4BB4E6] mr-2" />
                       <div className="flex flex-wrap gap-2">
                         {tags.split(",").map((tag, index) => (
-                          <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                          <span
+                            key={index}
+                            className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                          >
                             {tag.trim()}
                           </span>
                         ))}
@@ -420,6 +459,6 @@ export default function BlogEditorPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-``
+``;

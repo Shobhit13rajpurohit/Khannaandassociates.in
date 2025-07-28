@@ -428,9 +428,17 @@ export interface Location {
   address: string
   city: string
   country: string
-  contact_info: string
-  map_link: string
+  contact_info: {
+    phone: string
+    email: string
+  } | string 
   imageUrl?: string
+  about_office?: string
+  established?: string
+  practice_areas?: string[]
+  office_hours?: {
+    weekdays: string
+  }
   created_at: Timestamp
   updated_at: Timestamp
 }

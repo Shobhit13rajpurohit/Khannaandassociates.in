@@ -190,30 +190,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-[#1a3c61] mb-4">Recent Activity</h2>
-        <Card>
-          <div className="divide-y">
-            {recentActivity.map((activity, index) => (
-              <div key={`activity-${index}`} className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-medium">
-                    {activity.action} <span className="text-[#4BB4E6]">{activity.item}</span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {activity.time} by {activity.user}
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  View
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
+     
       {/* Site Health */}
       <div>
         <h2 className="text-xl font-semibold text-[#1a3c61] mb-4">Site Health</h2>
