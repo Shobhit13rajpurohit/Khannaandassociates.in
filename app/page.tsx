@@ -306,35 +306,7 @@ export default async function Home() {
               <ContactForm />
             </div>
 
-            <div>
-              <h3 className="text-2xl font-semibold mb-6 text-[#1a3c61]">Our Office</h3>
-              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <div className="mb-4">
-                  <h4 className="font-semibold text-[#1a3c61] mb-2">Address</h4>
-                  <p className="text-gray-700">123 Legal Avenue, New Delhi, India, 110001</p>
-                </div>
-                <div className="mb-4">
-                  <h4 className="font-semibold text-[#1a3c61] mb-2">Email</h4>
-                  <p className="text-gray-700">info@khannaandassociates.com</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#1a3c61] mb-2">Phone</h4>
-                  <p className="text-gray-700">+91 11 2345 6789</p>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h4 className="font-semibold text-[#1a3c61] mb-4">Office Hours</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-gray-700">Monday - Friday</div>
-                  <div className="text-gray-700">9:00 AM - 6:00 PM</div>
-                  <div className="text-gray-700">Saturday</div>
-                  <div className="text-gray-700">10:00 AM - 2:00 PM</div>
-                  <div className="text-gray-700">Sunday</div>
-                  <div className="text-gray-700">Closed</div>
-                </div>
-              </div>
-            </div>
+      
           </div>
         </div>
       </section>
