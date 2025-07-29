@@ -17,7 +17,7 @@ const jsonLd = {
   name: "Khanna and Associates",
   image: "https://www.khannaandassociates.com/logo.png",
   url: "https://www.khannaandassociates.com",
-  telephone: "+911123456789",
+  telephone: "+91946162007",
   description: "Top law firm in Delhi, Jaipur and Dehradun providing expert legal services since 1948.",
   address: [
     { "@type": "PostalAddress", streetAddress: "123 Legal Avenue", addressLocality: "New Delhi", postalCode: "110001", addressCountry: "IN", addressRegion: "Delhi", name: "Khanna and Associates - Delhi Office" },
@@ -74,10 +74,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  generator: 'v0.dev',
+  generator: '',
   // You can place your favicon here, or simply add an icon.ico/svg file in the /app directory
   icons: {
-    icon: '/placeholder.svg?height=32&width=32', 
+    icon: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo%20%281%29-vk5WhtSBgcMvCSbvXXByJg24ULHyLh.gif?', 
   },
   // Add the JSON-LD script here
   other: {
@@ -108,10 +108,10 @@ export default function RootLayout({
 
           {/* Floating Action Buttons */}
           <div className="fixed bottom-6 right-6 flex flex-col space-y-4 z-50">
-            <a href="tel:+911123456789" className="w-14 h-14 bg-[#1a3c61] rounded-full flex items-center justify-center shadow-lg hover:bg-[#132e4a] transition-colors" aria-label="Call us">
+            <a href="tel:+91946162007" className="w-14 h-14 bg-[#1a3c61] rounded-full flex items-center justify-center shadow-lg hover:bg-[#132e4a] transition-colors" aria-label="Call us">
               <Phone className="text-white" />
             </a>
-            <a href="https://wa.me/911123456789" className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:bg-[#128C7E] transition-colors" aria-label="Chat on WhatsApp">
+            <a href="https://wa.me/946162007" className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:bg-[#128C7E] transition-colors" aria-label="Chat on WhatsApp">
               <MessageCircle className="text-white" />
             </a>
           </div>

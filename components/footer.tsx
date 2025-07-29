@@ -48,7 +48,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#1a3c61] text-white">
       {/* India Presence Section */}
-      <div className="bg-white py-12">
+      {/* <div className="bg-white py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-2 text-[#1a3c61]">OUR PRESENCE</h2>
           <p className="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
@@ -91,7 +91,7 @@ export default function Footer() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Footer */}
       <div className="py-12">
