@@ -1,4 +1,5 @@
-import { adminDb } from "./firebase"
+// import { adminDb } from "./firebase"
+import { adminDb } from "./firebase-admin"
 import { Timestamp } from "firebase-admin/firestore"
 
 // Database types
