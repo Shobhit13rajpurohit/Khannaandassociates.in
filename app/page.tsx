@@ -3,10 +3,12 @@ import ServiceCard from "@/components/service-card"
 import ContactForm from "@/components/contact-form"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { getPublishedServices } from "@/lib/db"
+import { getPublishedServices, getLocations } from "@/lib/db"
+
 
 export default async function Home() {
   const services = await getPublishedServices()
+  const locations = await getLocations()
 
   const alert = () => {
     console.log("booked")
@@ -132,73 +134,24 @@ export default async function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <Link href="/locations/delhi" className="group">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-40">
-                  <Image
-                    src="https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=2070"
-                    alt="Delhi Office"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <h3 className="text-xl font-semibold text-white">Delhi</h3>
+            {locations.slice(0, 4).map(location => (
+              <Link href={`/locations/${location.slug}`} key={location.id} className="group">
+                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                  <div className="relative h-40">
+                    <Image
+                      src={location.imageUrl || "/placeholder.svg"}
+                      alt={`${location.name} Office`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 p-4">
+                      <h3 className="text-xl font-semibold text-white">{location.name}</h3>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-
-            <Link href="/locations/mumbai" className="group">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-40">
-                  <Image
-                    src="https://images.unsplash.com/photo-1566552881560-0be862a7c445?q=80&w=2070"
-                    alt="Mumbai Office"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <h3 className="text-xl font-semibold text-white">Mumbai</h3>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/locations/bangalore" className="group">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-40">
-                  <Image
-                    src="https://images.unsplash.com/photo-1596176530529-78163a4f7af2?q=80&w=2148"
-                    alt="Bangalore Office"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <h3 className="text-xl font-semibold text-white">Bangalore</h3>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            <Link href="/locations/new-york" className="group">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-40">
-                  <Image
-                    src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=2070"
-                    alt="New York Office"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <h3 className="text-xl font-semibold text-white">New York</h3>
-                  </div>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </div>
 
           <div className="text-center mt-10">
@@ -305,8 +258,7 @@ export default async function Home() {
               <h3 className="text-2xl font-semibold mb-6 text-[#1a3c61]">Get in Touch</h3>
               <ContactForm />
             </div>
-
-      
+            
           </div>
         </div>
       </section>

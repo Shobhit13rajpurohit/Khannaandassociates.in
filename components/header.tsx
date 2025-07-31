@@ -90,7 +90,9 @@ export default function Header() {
             <Search className="h-5 w-5" />
           </button>
 
-          <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white rounded-md px-6">Schedule Consultation</Button>
+          <Link href="/admin">
+            <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white rounded-md px-6">Login</Button>
+          </Link>
         </nav>
 
         {/* Mobile menu button */}
@@ -188,12 +190,14 @@ export default function Header() {
               </div>
             </div>
 
-            <Button
-              className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white w-full"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Schedule Consultation
-            </Button>
+            <Link href="/admin">
+              <Button
+                className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white w-full"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login
+              </Button>
+            </Link>
           </div>
         </div>
       )}
