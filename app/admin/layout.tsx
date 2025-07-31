@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", path: "/admin/dashboard" },
-    { name: "Pages", path: "/admin/pages" },
+    // { name: "Pages", path: "/admin/pages" },
     { name: "Services", path: "/admin/services" },
     { name: "Blog", path: "/blog/admin" },
     { name: "Team Members", path: "/admin/team" },

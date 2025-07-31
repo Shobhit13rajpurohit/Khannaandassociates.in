@@ -7,7 +7,7 @@ import { Users, FileText, MapPin, Edit3, ImageIcon, Globe } from "lucide-react"
 import Link from "next/link"
 
 interface Stats {
-  pages: number
+ 
   services: number
   teamMembers: number
   locations: number
@@ -24,7 +24,7 @@ interface Activity {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({
-    pages: 0,
+   
     services: 0,
     teamMembers: 0,
     locations: 0,
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
       try {
         // In a real application, you would fetch this data from your API
         setStats({
-          pages: 12,
+          
           services: 23,
           teamMembers: 8,
           locations: 8,
@@ -122,14 +122,7 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard
-          href="/admin/pages"
-          icon={FileText}
-          bgColor="bg-blue-100"
-          iconColor="text-blue-600"
-          label="Pages"
-          value={stats.pages}
-        />
+        
 
         <StatCard
           href="/admin/services"
@@ -174,8 +167,9 @@ export default function AdminDashboard() {
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-[#1a3c61] mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
-          <Link href="/admin/pages/edit?id=home">
-            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Edit Home Page</Button>
+      
+          <Link href="/admin/locations/new">
+            <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Add location</Button>
           </Link>
           <Link href="/blog/admin/new">
             <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Create Blog Post</Button>
@@ -206,11 +200,7 @@ export default function AdminDashboard() {
             <ProgressBar label="Content Freshness" percentage={78} />
           </div>
 
-          <div className="mt-6">
-            <Link href="/admin/settings/site-health">
-              <Button variant="outline">View Detailed Report</Button>
-            </Link>
-          </div>
+         
         </Card>
       </div>
     </div>
