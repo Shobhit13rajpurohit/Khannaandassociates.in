@@ -133,7 +133,7 @@ export default function AdminDashboard() {
           value={stats.locations}
         />
         <StatCard
-          href="/blog/admin"
+          href="/admin/blog"
           icon={Edit3}
           bgColor="bg-red-100"
           iconColor="text-red-600"
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
           <Link href="/admin/locations/new">
             <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Add Location</Button>
           </Link>
-          <Link href="/blog/admin/new">
+          <Link href="/admin/blog/new">
             <Button className="bg-[#1a3c61] hover:bg-[#132e4a]">Create Blog Post</Button>
           </Link>
         </div>

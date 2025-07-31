@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Dashboard", path: "/admin/dashboard" },
     // { name: "Pages", path: "/admin/pages" },
     { name: "Services", path: "/admin/services" },
-    { name: "Blog", path: "/blog/admin" },
+    { name: "Blog", path: "/admin/blog" },
     { name: "Team Members", path: "/admin/team" },
     { name: "Locations", path: "/admin/locations" },
   ]

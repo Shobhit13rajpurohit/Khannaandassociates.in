@@ -28,9 +28,6 @@ import {
   ListOrdered,
   Quote,
   Code,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
   Eye,
   Search,
   TrendingUp,
@@ -75,10 +72,6 @@ export default function BlogEditorPage() {
   const [twitterTitle, setTwitterTitle] = useState("");
   const [twitterDescription, setTwitterDescription] = useState("");
 
-  // Content editor state
-  const [selectedText, setSelectedText] = useState("");
-  const [cursorPosition, setCursorPosition] = useState(0);
-
   // SEO Analysis
   const [seoAnalysis, setSeoAnalysis] = useState<SEOAnalysis>({
     score: 0,
@@ -111,6 +104,7 @@ export default function BlogEditorPage() {
           setTags(post.tags.join(", "));
           setMetaDescription(post.meta_description || "");
           setFeaturedImage(post.featured_image || "");
+          setFeaturedImageAlt(post.featured_image_alt || "");
           setMetaTitle(post.meta_title || post.title);
           setFocusKeyword(post.focus_keyword || "");
           setCanonicalUrl(post.canonical_url || "");
@@ -205,7 +199,6 @@ export default function BlogEditorPage() {
   const formatOrderedList = () => insertAtCursor("\n1. ");
   const formatQuote = () => insertAtCursor("\n> ");
   const formatCode = () => wrapSelectedText("`");
-  const formatCodeBlock = () => insertAtCursor("\n```\ncode here\n```\n");
 
   const insertLink = () => {
     const linkText = prompt("Enter link text:");
@@ -272,7 +265,7 @@ export default function BlogEditorPage() {
       issues.push("Missing content");
       score -= 25;
     } else {
-      const wordCount = content.split(/\s+/).length;
+      const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
       if (wordCount < 300) {
         suggestions.push("Consider adding more content (aim for 300+ words)");
         score -= 10;
@@ -390,7 +383,7 @@ export default function BlogEditorPage() {
 
       if (response.ok) {
         alert(`Blog post ${isEditing ? "updated" : "created"} successfully!`);
-        router.push("/blog/admin");
+        router.push("/admin/blog");
       } else {
         const error = await response.json();
         alert(
@@ -423,7 +416,7 @@ export default function BlogEditorPage() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center">
-            <Link href="/blog/admin">
+            <Link href="/admin/blog">
               <Button variant="outline" size="sm" className="mr-4">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
@@ -625,7 +618,7 @@ export default function BlogEditorPage() {
                         />
                       </div>
                       <p className="text-sm text-gray-500 mt-1">
-                        {content.split(/\s+/).length} words | Supports Markdown formatting
+                        {content.split(/\s+/).filter(word => word.length > 0).length} words | Supports Markdown formatting
                       </p>
                     </div>
                   </div>
@@ -791,22 +784,22 @@ export default function BlogEditorPage() {
                           <CardTitle className="text-sm">Facebook Preview</CardTitle>
                         </CardHeader>
                         <CardContent>
-                                                      <div className="border border-gray-200 rounded-lg overflow-hidden max-w-md">
-                              {featuredImage && (
-                                <img src={featuredImage} alt="Preview" className="w-full h-40 object-cover" />
-                              )}
-                              <div className="p-3">
-                                <p className="font-medium text-sm text-gray-900 line-clamp-2">
-                                  {openGraphTitle || title || "Your Blog Post Title"}
-                                </p>
-                                <p className="text-gray-500 text-xs mt-1 line-clamp-2">
-                                  {openGraphDescription || metaDescription || "Your description here"}
-                                </p>
-                                <p className="text-gray-400 text-xs mt-1 uppercase">
-                                  khannaandassociates.com
-                                </p>
-                              </div>
+                          <div className="border border-gray-200 rounded-lg overflow-hidden max-w-md">
+                            {featuredImage && (
+                              <img src={featuredImage} alt="Preview" className="w-full h-40 object-cover" />
+                            )}
+                            <div className="p-3">
+                              <p className="font-medium text-sm text-gray-900 line-clamp-2">
+                                {openGraphTitle || title || "Your Blog Post Title"}
+                              </p>
+                              <p className="text-gray-500 text-xs mt-1 line-clamp-2">
+                                {openGraphDescription || metaDescription || "Your description here"}
+                              </p>
+                              <p className="text-gray-400 text-xs mt-1 uppercase">
+                                khannaandassociates.com
+                              </p>
                             </div>
+                          </div>
                         </CardContent>
                       </Card>
 
