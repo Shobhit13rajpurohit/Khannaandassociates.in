@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminStorage } from '../../../lib/firebase';
+import { adminStorage } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: Request) {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const bucket = adminStorage.bucket();
+    const bucket = adminStorage().bucket();
     const filename = `${uuidv4()}-${file.name}`;
     const fileRef = bucket.file(`team-images/${filename}`);
 

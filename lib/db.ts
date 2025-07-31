@@ -1,4 +1,3 @@
-// import { adminDb } from "./firebase"
 import { adminDb } from "./firebase-admin"
 import { Timestamp } from "firebase-admin/firestore"
 
@@ -89,6 +88,27 @@ export async function getService(slug: string): Promise<Service | null> {
   } catch (error) {
     console.error("Error in getService:", error)
     return null
+  }
+}
+
+export async function searchBlogPosts(query: string): Promise<BlogPost[]> {
+  try {
+    const blogPostsCol = adminDb.collection("blog_posts");
+    const blogPostsSnapshot = await blogPostsCol.get();
+    const blogPostsList = blogPostsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+
+    const lowerCaseQuery = query.toLowerCase();
+
+    const results = blogPostsList.filter(post => {
+      const titleMatch = post.title.toLowerCase().includes(lowerCaseQuery);
+      const contentMatch = post.content.toLowerCase().includes(lowerCaseQuery);
+      return titleMatch || contentMatch;
+    });
+
+    return results;
+  } catch (error) {
+    console.error("Error searching blog posts:", error);
+    return [];
   }
 }
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
