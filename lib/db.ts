@@ -49,13 +49,7 @@ export interface BlogPost {
 
 
 
-export interface AdminUser {
-  id: string
-  email: string
-  name: string
-  role: string
-  created_at: Timestamp
-}
+
 
 // Service operations
 export async function getServices(): Promise<Service[]> {

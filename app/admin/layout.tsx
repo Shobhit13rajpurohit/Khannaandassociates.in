@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LogOut } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -18,24 +18,49 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", path: "/admin/dashboard" },
     { name: "Pages", path: "/admin/pages" },
     { name: "Services", path: "/admin/services" },
-     { name: "Blog", path: "/blog/admin" },
+    { name: "Blog", path: "/blog/admin" },
     { name: "Team Members", path: "/admin/team" },
     { name: "Locations", path: "/admin/locations" },
-   
-    
-
   ]
 
   const closeSidebar = () => setIsSidebarOpen(false)
   const openSidebar = () => setIsSidebarOpen(true)
 
   const isActiveLink = (path: string) => pathname === path
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        // Clear any client-side state if needed
+        router.push('/admin')
+        router.refresh()
+      } else {
+        console.error('Logout failed')
+        // Still redirect to login page even if logout API fails
+        router.push('/admin')
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still redirect to login page even if there's an error
+      router.push('/admin')
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
 
   const NavLink = ({ 
     item, 
@@ -61,6 +86,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     </Link>
   )
 
+  const LogoutButton = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <Button
+      onClick={handleLogout}
+      disabled={isLoggingOut}
+      variant="ghost"
+      className={`${
+        isMobile ? 'w-full justify-start text-base' : 'text-sm'
+      } text-white/70 hover:bg-red-600 hover:text-white transition-colors duration-200 px-2 py-2 font-medium rounded-md`}
+    >
+      <LogOut className={`${isMobile ? 'mr-2' : 'mr-1'} h-4 w-4`} />
+      {isLoggingOut ? 'Logging out...' : 'Logout'}
+    </Button>
+  )
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar for desktop */}
@@ -81,6 +120,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <NavLink key={item.name} item={item} />
             ))}
           </nav>
+          {/* Logout button at bottom of sidebar */}
+          <div className="px-2 pb-4">
+            <LogoutButton />
+          </div>
         </div>
       </div>
 
@@ -106,6 +149,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               priority
             />
           </div>
+          {/* Mobile logout button */}
+          <Button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-red-600"
+            aria-label="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
@@ -159,6 +213,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   />
                 ))}
               </nav>
+            </div>
+            
+            {/* Mobile logout button at bottom */}
+            <div className="px-2 pb-4">
+              <LogoutButton isMobile={true} />
             </div>
           </div>
         </div>
