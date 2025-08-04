@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "node --openssl-legacy-provider ./node_modules/.bin/next build",
     
+     "build": "NODE_OPTIONS='--openssl-legacy-provider' next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start"
