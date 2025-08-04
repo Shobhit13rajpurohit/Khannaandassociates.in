@@ -14,7 +14,7 @@ const jsonLd = {
   "@type": "LegalService",
   name: "Khanna and Associates",
   image: "https://www.khannaandassociates.com/logo.png",
-  url: "https://www.khannaandassociates.com",
+  url: "https://k-a-in-git-main-shobhits-projects-3b5979eb.vercel.app/",
   telephone: "+91946162007",
   description:
     "Top law firm in Delhi, Jaipur and Dehradun providing expert legal services since 1948.",
@@ -126,7 +126,7 @@ export const metadata: Metadata = {
     title: "Khanna and Associates - Top Law Firm in Delhi, Jaipur & Dehradun",
     description:
       "Premier legal services across India with offices in Delhi, Jaipur, Dehradun and more. Trusted legal excellence since 1948.",
-    url: "https://www.khannaandassociates.com",
+    url: "https://k-a-in-git-main-shobhits-projects-3b5979eb.vercel.app/",
     siteName: "Khanna and Associates",
     locale: "en_US",
     type: "website",

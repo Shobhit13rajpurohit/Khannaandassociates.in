@@ -690,7 +690,7 @@ export default function BlogEditorPage() {
                         id="canonicalUrl"
                         value={canonicalUrl}
                         onChange={(e) => setCanonicalUrl(e.target.value)}
-                        placeholder="https://www.khannaandassociates.com/blog/post-slug"
+                        placeholder="https://k-a-in-git-main-shobhits-projects-3b5979eb.vercel.app/blog/post-slug"
                         className="mt-1"
                       />
                       <p className="text-sm text-gray-500 mt-1">
@@ -709,7 +709,7 @@ export default function BlogEditorPage() {
                           {metaTitle || title || "Your Blog Post Title"}
                         </p>
                         <p className="text-green-700 text-sm">
-                          https://www.khannaandassociates.com/blog/{slug || "post-slug"}
+                          https://k-a-in-git-main-shobhits-projects-3b5979eb.vercel.app/blog/{slug || "post-slug"}
                         </p>
                         <p className="text-gray-600 text-sm mt-1 line-clamp-2">
                           {metaDescription || "Your meta description will appear here. Make it compelling!"}
@@ -828,7 +828,7 @@ export default function BlogEditorPage() {
                                 {twitterDescription || metaDescription || "Your description here"}
                               </p>
                               <p className="text-gray-400 text-xs mt-1">
-                                khannaandassociates.com
+                                khannaandassociates.in
                               </p>
                             </div>
                           </div>

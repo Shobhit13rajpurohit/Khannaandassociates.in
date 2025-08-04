@@ -24,13 +24,13 @@ export async function generateMetadata({ params }: { params: { location: string 
     openGraph: {
       title: `Top Law Firm in ${location.name} | Khanna and Associates`,
       description: `Premier law firm in ${location.name} offering comprehensive legal services.`,
-      url: `https://www.khannaandassociates.com/locations/${location.slug}`,
+      url: `https://k-a-in-git-main-shobhits-projects-3b5979eb.vercel.app/locations/${location.slug}`,
       siteName: "Khanna and Associates",
       locale: "en_US",
       type: "website",
     },
     alternates: {
-      canonical: `https://www.khannaandassociates.com/locations/${location.slug}`,
+      canonical: `https://k-a-in-git-main-shobhits-projects-3b5979eb.vercel.app/locations/${location.slug}`,
     },
   }
 }
