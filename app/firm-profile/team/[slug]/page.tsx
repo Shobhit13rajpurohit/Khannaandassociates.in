@@ -1,3 +1,5 @@
+export const revalidate = 0
+
 import { getTeamMember } from "../../../../lib/db"
 import { notFound } from "next/navigation"
 import Image from "next/image"

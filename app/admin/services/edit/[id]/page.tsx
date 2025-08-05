@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
 import { ImageUpload } from '@/components/ImageUpload';
+import { useAdminToken } from '@/hooks/useAdminToken';
 
 export default function EditServicePage({ params }: { params: { id: string } }) {
+  const { token, isTokenLoading } = useAdminToken();
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -24,27 +26,27 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
     meta_title: '',
     meta_description: '',
   });
-  
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [newKeyPoint, setNewKeyPoint] = useState("");
   const [newRelatedService, setNewRelatedService] = useState("");
-  
+
   const router = useRouter();
 
   // Fetch service data on component mount
   useEffect(() => {
     const fetchService = async () => {
+      if (!token) return;
       try {
         setFetchLoading(true);
-        const token = localStorage.getItem("admin_token");
         const response = await fetch(`/api/admin/services/${params.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setFormData({
@@ -70,9 +72,11 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
         setFetchLoading(false);
       }
     };
-    
-    fetchService();
-  }, [params.id]);
+
+    if (!isTokenLoading) {
+      fetchService();
+    }
+  }, [params.id, token, isTokenLoading]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -80,7 +84,6 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
     setError(null);
 
     try {
-      const token = localStorage.getItem("admin_token");
       const response = await fetch(`/api/admin/services/${params.id}`, {
         method: 'PATCH',
         headers: {
@@ -153,7 +156,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
     })
   }
 
-  if (fetchLoading) {
+  if (fetchLoading || isTokenLoading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
