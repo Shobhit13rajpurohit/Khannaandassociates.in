@@ -7,19 +7,23 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Eye } from "lucide-react"
 import Link from "next/link"
 import type { Service } from "@/lib/db"
+import { useAdminToken } from "@/hooks/useAdminToken"
 
 export default function AdminServicesPage() {
+  const { token, isTokenLoading } = useAdminToken()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchServices()
-  }, [])
+    if (!isTokenLoading && token) {
+      fetchServices()
+    }
+  }, [token, isTokenLoading])
 
   const fetchServices = async () => {
+    setLoading(true)
     try {
-      const token = localStorage.getItem("admin_token")
       const response = await fetch("/api/admin/services", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -43,7 +47,6 @@ export default function AdminServicesPage() {
     if (!confirm("Are you sure you want to delete this service?")) return
 
     try {
-      const token = localStorage.getItem("admin_token")
       const response = await fetch(`/api/admin/services/${id}`, {
         method: "DELETE",
         headers: {
@@ -61,7 +64,7 @@ export default function AdminServicesPage() {
     }
   }
 
-  if (loading) {
+  if (loading || isTokenLoading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">

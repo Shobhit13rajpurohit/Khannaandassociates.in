@@ -1,46 +1,12 @@
+export const revalidate = 0
+
 import TeamMember from "@/components/team-member"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getActiveTeamMembers } from "@/lib/db"
 
-export default function TeamPage() {
-  const teamMembers = [
-    {
-      name: "Amarnath Singh Khanna",
-      title: "Founder",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974",
-      slug: "amarnath-singh-khanna",
-    },
-    {
-      name: "Priya Sharma",
-      title: "Managing Partner",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976",
-      slug: "priya-sharma",
-    },
-    {
-      name: "Rajesh Kumar",
-      title: "Senior Partner",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070",
-      slug: "rajesh-kumar",
-    },
-    {
-      name: "Anjali Singh",
-      title: "Partner, Corporate Law",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1961",
-      slug: "anjali-singh",
-    },
-    {
-      name: "Vikram Malhotra",
-      title: "Partner, Real Estate Law",
-      image: "https://images.unsplash.com/photo-1507003211169-e69adba4c2d9?q=80&w=1974",
-      slug: "vikram-malhotra",
-    },
-    {
-      name: "Sneha Reddy",
-      title: "Associate, Intellectual Property",
-      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1976",
-      slug: "sneha-reddy",
-    },
-  ]
+export default async function TeamPage() {
+  const teamMembers = await getActiveTeamMembers()
 
   return (
     <div className="min-h-screen">
