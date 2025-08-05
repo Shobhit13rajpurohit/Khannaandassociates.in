@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getServices, createService } from "@/lib/db"
+import { revalidate } from "@/lib/revalidate"
 
 export async function GET() {
   try {
@@ -18,9 +19,26 @@ export async function POST(request: Request) {
     if (!newService) {
       throw new Error("Failed to create service")
     }
+
+    // Revalidation logic
+    try {
+      const pathsToRevalidate = ["/services"]
+      if (newService.slug) {
+        pathsToRevalidate.push(`/services/${newService.slug}`)
+      }
+      await Promise.all(pathsToRevalidate.map(path => revalidate(path)))
+      console.log("Revalidation triggered for:", pathsToRevalidate)
+    } catch (revalError) {
+      console.error(
+        `Revalidation failed for service (slug: ${newService.slug}), but the service was created successfully. Please revalidate manually.`,
+        revalError,
+      )
+    }
+
     return NextResponse.json(newService, { status: 201 })
   } catch (error) {
     console.error("API Error creating service:", error)
-    return NextResponse.json({ message: "Error creating service" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "An unknown error occurred"
+    return NextResponse.json({ message: `Error creating service: ${message}` }, { status: 500 })
   }
 }
