@@ -12,8 +12,11 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
 import { ImageUpload } from '@/components/ImageUpload'
+import { useAdminToken } from "@/hooks/useAdminToken"
+
 export default function NewServicePage() {
   const router = useRouter()
+  const { token, isTokenLoading } = useAdminToken()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
@@ -32,10 +35,13 @@ export default function NewServicePage() {
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+  if (!token) {
+    alert("Authentication token not found. Please log in again.");
+    return;
+  }
   setLoading(true);
 
   try {
-    const token = localStorage.getItem("admin_token");
     const response = await fetch("/api/admin/services", {
       method: "POST",
       headers: {
@@ -261,7 +267,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </select>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading || isTokenLoading}>
                   {loading ? "Creating..." : "Create Service"}
                 </Button>
               </CardContent>
