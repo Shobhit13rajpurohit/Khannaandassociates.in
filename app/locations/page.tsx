@@ -34,7 +34,8 @@ export default async function LocationsPage() {
                 <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                   <div className="relative h-48 w-full">
                     <Image
-                      src={location.map_link || "/placeholder.svg"}
+                      
+                      src={location.imageUrl || "/placeholder.svg"}
                       alt={location.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
