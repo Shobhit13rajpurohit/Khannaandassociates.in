@@ -39,7 +39,7 @@ export default function BlogAdminPage() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch("/api/admin/blog")
+      const response = await fetch("/api/admin/blog", { cache: 'no-store' })
       
       if (!response.ok) {
         throw new Error("Failed to fetch blog posts")

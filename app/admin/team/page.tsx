@@ -21,7 +21,7 @@ export default function TeamListPage() {
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
-        const res = await fetch("/api/admin/team")
+        const res = await fetch("/api/admin/team", { cache: 'no-store' })
         if (!res.ok) {
           throw new Error("Failed to fetch team members")
         }

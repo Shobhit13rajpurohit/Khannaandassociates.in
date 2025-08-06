@@ -12,7 +12,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     const fetchService = async () => {
-      const response = await fetch(`/api/admin/services/${params.id}`);
+      const response = await fetch(`/api/admin/services/${params.id}`, { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
         setTitle(data.title);

@@ -42,7 +42,7 @@ export default function EditLocationPage() {
       async function fetchLocation() {
         setLoading(true)
         try {
-          const response = await fetch(`/api/admin/locations/${id}`)
+          const response = await fetch(`/api/admin/locations/${id}`, { cache: 'no-store' })
           if (!response.ok) {
             throw new Error("Failed to fetch location")
           }

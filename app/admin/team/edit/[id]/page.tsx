@@ -35,7 +35,7 @@ export default function EditTeamMemberPage({ params }: { params: Promise<{ id: s
     const fetchTeamMember = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/admin/team/${id}`);
+        const res = await fetch(`/api/admin/team/${id}`, { cache: 'no-store' });
         const data: TeamMember = await res.json();
         if (res.ok) {
           setName(data.name);

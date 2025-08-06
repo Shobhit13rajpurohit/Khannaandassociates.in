@@ -1,4 +1,7 @@
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { NextResponse } from "next/server"
 import { getBlogPosts, createBlogPost } from "@/lib/db"
 import { revalidate } from "@/lib/revalidate"
