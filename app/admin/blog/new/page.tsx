@@ -92,7 +92,7 @@ export default function BlogEditorPage() {
   const fetchPost = async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/blog`);
+      const response = await fetch(`/api/admin/blog`, { cache: 'no-store' });
       if (response.ok) {
         const posts = await response.json();
         const post = posts.find((p: any) => p.id === id);

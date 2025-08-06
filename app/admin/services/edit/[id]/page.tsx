@@ -40,6 +40,7 @@ export default function EditServicePage({ params }: { params: { id: string } }) 
         setFetchLoading(true);
         const token = localStorage.getItem("admin_token");
         const response = await fetch(`/api/admin/services/${params.id}`, {
+          cache: 'no-store',
           headers: {
             Authorization: `Bearer ${token}`,
           },

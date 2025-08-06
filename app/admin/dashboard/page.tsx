@@ -27,10 +27,10 @@ export default function AdminDashboard() {
       setLoading(true)
       try {
         const [servicesRes, teamRes, locationsRes, blogRes] = await Promise.all([
-          fetch("/api/admin/services"),
-          fetch("/api/admin/team"),
-          fetch("/api/admin/locations"),
-          fetch("/api/admin/blog"),
+          fetch("/api/admin/services", { cache: 'no-store' }),
+          fetch("/api/admin/team", { cache: 'no-store' }),
+          fetch("/api/admin/locations", { cache: 'no-store' }),
+          fetch("/api/admin/blog", { cache: 'no-store' }),
         ])
 
         const services = await servicesRes.json()

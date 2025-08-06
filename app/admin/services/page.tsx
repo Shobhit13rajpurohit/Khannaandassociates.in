@@ -21,6 +21,7 @@ export default function AdminServicesPage() {
     try {
       const token = localStorage.getItem("admin_token")
       const response = await fetch("/api/admin/services", {
+        cache: 'no-store',
         headers: {
           Authorization: `Bearer ${token}`,
         },

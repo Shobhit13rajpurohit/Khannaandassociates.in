@@ -29,7 +29,7 @@ export default function LocationsPage() {
   useEffect(() => {
     async function fetchLocations() {
       try {
-        const response = await fetch("/api/admin/locations")
+        const response = await fetch("/api/admin/locations", { cache: 'no-store' })
         if (!response.ok) {
           throw new Error("Failed to fetch locations")
         }
