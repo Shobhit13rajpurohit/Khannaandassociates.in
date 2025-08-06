@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Image from "next/image"
 import ServiceCard from "@/components/service-card"
 import ContactForm from "@/components/contact-form"
