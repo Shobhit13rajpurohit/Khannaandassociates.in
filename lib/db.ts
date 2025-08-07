@@ -549,6 +549,28 @@ export async function deleteLocation(id: string): Promise<boolean> {
     return false
   }
 }
+
+export async function getRelatedBlogPosts(
+  category: string,
+  currentPostId: string,
+): Promise<BlogPost[]> {
+  try {
+    const blogPostsCol = adminDb.collection("blog_posts")
+    const blogPostsSnapshot = await blogPostsCol
+      .where("status", "==", "published")
+      .where("category", "==", category)
+      .limit(4)
+      .get()
+    const blogPostsList = blogPostsSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as BlogPost))
+      .filter(post => post.id !== currentPostId)
+      .slice(0, 3)
+    return blogPostsList
+  } catch (error) {
+    console.error("Error fetching related blog posts:", error)
+    return []
+  }
+}
 export async function getLocationBySlug(slug: string): Promise<Location | null> {
   try {
     const locationsCol = adminDb.collection("locations")

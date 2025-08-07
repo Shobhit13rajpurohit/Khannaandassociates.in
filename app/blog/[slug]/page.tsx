@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import Link from "next/link"
 import Image from "next/image"
@@ -6,7 +6,7 @@ import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Calendar, User, Tag, Facebook, Twitter, Linkedin, Search } from "lucide-react"
 import type { Metadata } from "next"
-import { getBlogPost, getPublishedBlogPosts } from "@/lib/db"
+import { getBlogPost, getRelatedBlogPosts, getPublishedBlogPosts } from "@/lib/db"
 import { format } from "date-fns"
 
 interface BlogPostParams {
@@ -58,9 +58,9 @@ export default async function BlogPostPage({ params }: BlogPostParams) {
     notFound()
   }
 
-  // Related posts (would typically be fetched based on tags or category)
+  // Related posts
+  const relatedPosts = await getRelatedBlogPosts(post.category, post.id)
   const allPosts = await getPublishedBlogPosts()
-  const relatedPosts = allPosts.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3)
 
   return (
     <div className="min-h-screen">

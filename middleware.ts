@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { adminAuth } from './lib/firebase'
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {

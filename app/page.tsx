@@ -1,10 +1,12 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 import Image from "next/image"
 import ServiceCard from "@/components/service-card"
-import ContactForm from "@/components/contact-form"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getPublishedServices, getLocations } from "@/lib/db"
+import dynamic from "next/dynamic"
+
+const ContactForm = dynamic(() => import("@/components/contact-form"))
 
 
 export default async function Home() {
@@ -36,9 +38,13 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
               success.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+              <Link href="/#contact">
+                          <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+
                 Schedule a Consultation
-              </Button>
+              </Button> 
+                        </Link>
+             
               <Button
                 variant="outline"
                 className="bg-white text-[#1a3c61] hover:bg-[#4BB4E6] hover:text-white hover:border-[#4BB4E6] px-8 py-6 text-lg"
@@ -245,24 +251,37 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Contact Us</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Reach out to our team of legal experts for a consultation. We're here to help with your legal needs.
-            </p>
-          </div>
+     <section id="contact" className="py-20 bg-gray-50">
+  <div className="container mx-auto px-4">
+    <div className="text-center mb-16">
+      <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Contact Us</h2>
+      <p className="text-gray-600 max-w-2xl mx-auto">
+        Reach out to our team of legal experts for a consultation. We're here to help with your legal needs.
+      </p>
+    </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <h3 className="text-2xl font-semibold mb-6 text-[#1a3c61]">Get in Touch</h3>
-              <ContactForm />
-            </div>
-            
-          </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
+      
+      {/* --- Image Column (Left Side) --- */}
+      <div className="hidden lg:flex justify-center items-center">
+        <img 
+          src="/nipun.jpg" 
+          alt="Contact person for the law firm" 
+          className="rounded-lg shadow-xl w-80 h-96 object-cover"
+        />
+      </div>
+      
+      {/* --- Form Column (Right Side) --- */}
+      <div className="flex">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full flex flex-col justify-center">
+          <h3 className="text-2xl font-semibold mb-6 text-[#1a3c61]">Get in Touch</h3>
+          <ContactForm />
         </div>
-      </section>
+      </div>
+
+    </div>
+  </div>
+</section>
     </div>
   )
 }
