@@ -6,7 +6,10 @@ import ServiceCard from "@/components/service-card"
 import { getPublishedServices } from "@/lib/db"
 
 export default async function ServicesPage() {
-  const services = await getPublishedServices()
+  const servicesData = await getPublishedServices()
+  
+  // Sort services alphabetically by title
+  const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
 
   return (
     <div className="min-h-screen">
@@ -44,8 +47,6 @@ export default async function ServicesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service) => (
               <Link href={`/services/${service.slug}`} key={service.id}>
-                {/* Pass the featured_image from your service object as the imageUrl prop.
-                */}
                 <ServiceCard 
                   title={service.title} 
                   imageUrl={service.featured_image} 
