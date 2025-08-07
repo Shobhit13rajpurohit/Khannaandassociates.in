@@ -1,5 +1,4 @@
 export const dynamic = 'force-dynamic';
-
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -66,9 +65,10 @@ export default async function ServicePage({ params }: ServicePageProps) {
     notFound()
   }
 
-  // Get related services
-  const allServices = await getPublishedServices()
-  const relatedServices = allServices.filter((s) => s.id !== service.id).slice(0, 3)
+  // Get related services and sort alphabetically
+  const allServicesData = await getPublishedServices()
+  const allServicesSorted = allServicesData.sort((a, b) => a.title.localeCompare(b.title))
+  const relatedServices = allServicesSorted.filter((s) => s.id !== service.id).slice(0, 3)
 
   return (
     <div className="min-h-screen">
