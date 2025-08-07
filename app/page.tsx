@@ -3,30 +3,31 @@ import Image from "next/image"
 import ServiceCard from "@/components/service-card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { getPublishedServices, getLocations } from "@/lib/db"
+import { getPublishedServicesLimited, getLocationsLimited } from "@/lib/db"
 import dynamic from "next/dynamic"
 
-const ContactForm = dynamic(() => import("@/components/contact-form"))
-
+// Dynamically import heavy components to reduce initial bundle size
+const ContactForm = dynamic(() => import("@/components/contact-form"), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
+})
 
 export default async function Home() {
+  // Use limited versions to reduce page size
+  const [servicesData, locations] = await Promise.all([
+    getPublishedServicesLimited(6), // Only show 6 services max
+    getLocationsLimited(4)          // Only show 4 locations max
+  ])
   
-const servicesData = await getPublishedServices()
-const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
-  const locations = await getLocations()
-
-  const alert = () => {
-    console.log("booked")
-  }
+  const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section - Optimized images */}
       <section id="home" className="relative bg-[#1a3c61] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=2070')",
+            backgroundImage: "url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=1200&auto=format&fit=crop')", // Smaller image
             filter: "brightness(0.4)",
           }}
         ></div>
@@ -39,12 +40,10 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/#contact">
-                          <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
-
-                Schedule a Consultation
-              </Button> 
-                        </Link>
-             
+                <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+                  Schedule a Consultation
+                </Button> 
+              </Link>
               <Button
                 variant="outline"
                 className="bg-white text-[#1a3c61] hover:bg-[#4BB4E6] hover:text-white hover:border-[#4BB4E6] px-8 py-6 text-lg"
@@ -56,18 +55,19 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
         </div>
       </section>
 
-      {/* About Section */}
+      {/* About Section - Optimized image */}
       <section id="about" className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2">
               <div className="relative">
                 <Image
-                  src="https://images.unsplash.com/photo-1575505586569-646b2ca898fc?q=80&w=2005"
+                  src="https://images.unsplash.com/photo-1575505586569-646b2ca898fc?q=80&w=800&auto=format&fit=crop"
                   alt="Khanna and Associates Office"
                   width={600}
                   height={400}
                   className="rounded-lg shadow-lg object-cover"
+                  loading="lazy"
                 />
                 <div className="absolute -bottom-6 -right-6 bg-[#4BB4E6] p-4 rounded-lg shadow-lg hidden md:block">
                   <p className="text-white font-bold text-xl">Est. 1948</p>
@@ -99,36 +99,49 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
       </section>
 
       {/* Services Section */}
-       <section className="py-20">
-  <div className="container mx-auto px-4">
-    <div className="text-center mb-16">
-      <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Practice Areas</h2>
-      <p className="text-gray-600 max-w-2xl mx-auto">
-        Our experienced attorneys provide expert legal counsel across a wide range of practice areas, ensuring
-        comprehensive support for all your legal needs.
-      </p>
-    </div>
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Practice Areas</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our experienced attorneys provide expert legal counsel across a wide range of practice areas, ensuring
+              comprehensive support for all your legal needs.
+            </p>
+          </div>
 
-    {services.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {services.map((service) => (
-          <Link href={`/services/${service.slug}`} key={service.id}>
-            <ServiceCard 
-              title={service.title} 
-              imageUrl={service.featured_image} 
-              standalone={true} 
-            />
-          </Link>
-        ))}
-      </div>
-    ) : (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold text-gray-600 mb-4">No services available</h3>
-        <p className="text-gray-500">Please check back later for our legal services.</p>
-      </div>
-    )}
-  </div>
-</section>
+          {services.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {services.map((service) => (
+                  <Link href={`/services/${service.slug}`} key={service.id}>
+                    <ServiceCard 
+                      title={service.title} 
+                      imageUrl={service.featured_image} 
+                      standalone={true} 
+                    />
+                  </Link>
+                ))}
+              </div>
+              
+              {/* Show "View All" if we have exactly 6 services (indicating there might be more) */}
+              {services.length === 6 && (
+                <div className="text-center mt-10">
+                  <Link href="/services">
+                    <Button className="bg-[#1a3c61] hover:bg-[#132e4a] text-white px-6">
+                      View All Services
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-semibold text-gray-600 mb-4">No services available</h3>
+              <p className="text-gray-500">Please check back later for our legal services.</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Global Presence */}
       <section className="py-16 bg-gray-50">
@@ -150,6 +163,8 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
                       alt={`${location.name} Office`}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      sizes="(max-width: 768px) 50vw, 25vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 p-4">
@@ -169,7 +184,7 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials - Optimized images */}
       <section className="py-20 bg-[#1a3c61] text-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -185,11 +200,12 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full overflow-hidden">
                   <Image
-                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974"
+                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=150&auto=format&fit=crop&crop=face"
                     alt="Amit Sharma"
-                    width={100}
-                    height={100}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="ml-4">
@@ -207,11 +223,12 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full overflow-hidden">
                   <Image
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976"
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=150&auto=format&fit=crop&crop=face"
                     alt="Priya Patel"
-                    width={100}
-                    height={100}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="ml-4">
@@ -229,11 +246,12 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full overflow-hidden">
                   <Image
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070"
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop&crop=face"
                     alt="Rajiv Mehta"
-                    width={100}
-                    height={100}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="ml-4">
@@ -251,37 +269,40 @@ const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
       </section>
 
       {/* Contact Section */}
-     <section id="contact" className="py-20 bg-gray-50">
-  <div className="container mx-auto px-4">
-    <div className="text-center mb-16">
-      <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Contact Us</h2>
-      <p className="text-gray-600 max-w-2xl mx-auto">
-        Reach out to our team of legal experts for a consultation. We're here to help with your legal needs.
-      </p>
-    </div>
+      <section id="contact" className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Contact Us</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Reach out to our team of legal experts for a consultation. We're here to help with your legal needs.
+            </p>
+          </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
-      
-      {/* --- Image Column (Left Side) --- */}
-      <div className="hidden lg:flex justify-center items-center">
-        <img 
-          src="/nipun.jpg" 
-          alt="Contact person for the law firm" 
-          className="rounded-lg shadow-xl w-80 h-96 object-cover"
-        />
-      </div>
-      
-      {/* --- Form Column (Right Side) --- */}
-      <div className="flex">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full flex flex-col justify-center">
-          <h3 className="text-2xl font-semibold mb-6 text-[#1a3c61]">Get in Touch</h3>
-          <ContactForm />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
+            
+            {/* --- Image Column (Left Side) --- */}
+            <div className="hidden lg:flex justify-center items-center">
+              <Image 
+                src="/nipun.jpg" 
+                alt="Contact person for the law firm" 
+                width={320}
+                height={384}
+                className="rounded-lg shadow-xl object-cover"
+                loading="lazy"
+              />
+            </div>
+            
+            {/* --- Form Column (Right Side) --- */}
+            <div className="flex">
+              <div className="bg-white p-8 rounded-lg shadow-lg w-full flex flex-col justify-center">
+                <h3 className="text-2xl font-semibold mb-6 text-[#1a3c61]">Get in Touch</h3>
+                <ContactForm />
+              </div>
+            </div>
+
+          </div>
         </div>
-      </div>
-
-    </div>
-  </div>
-</section>
+      </section>
     </div>
   )
 }

@@ -585,3 +585,64 @@ export async function getLocationBySlug(slug: string): Promise<Location | null> 
     return null
   }
 }
+// Add these optimized functions to your db.ts file
+
+export async function getPublishedServicesLimited(limit: number = 6): Promise<Service[]> {
+  try {
+    const servicesCol = adminDb.collection("services")
+    const servicesSnapshot = await servicesCol
+      .where("status", "==", "published")
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .get()
+    
+    const servicesList = servicesSnapshot.docs.map(doc => {
+      const data = doc.data() as Service
+      // Remove large content field for homepage to reduce size
+      return {
+        id: doc.id,
+        title: data.title,
+        slug: data.slug,
+        description: data.description,
+        featured_image: data.featured_image,
+        key_points: data.key_points?.slice(0, 3) || [], // Limit key points
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      } as Partial<Service>
+    })
+    return servicesList as Service[]
+  } catch (error) {
+    console.error("Error fetching limited published services:", error)
+    return []
+  }
+}
+
+export async function getLocationsLimited(limit: number = 4): Promise<Location[]> {
+  try {
+    const locationsCol = adminDb.collection("locations")
+    const locationsSnapshot = await locationsCol
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .get()
+    
+    const locationsList = locationsSnapshot.docs.map(doc => {
+      const data = doc.data() as Location
+      // Only return essential fields for homepage
+      return {
+        id: doc.id,
+        name: data.name,
+        slug: data.slug,
+        city: data.city,
+        country: data.country,
+        imageUrl: data.imageUrl,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      } as Partial<Location>
+    })
+    return locationsList as Location[]
+  } catch (error) {
+    console.error("Error fetching limited locations:", error)
+    return []
+  }
+}
