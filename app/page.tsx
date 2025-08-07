@@ -8,7 +8,9 @@ import { getPublishedServices, getLocations } from "@/lib/db"
 
 
 export default async function Home() {
-  const services = await getPublishedServices()
+  
+const servicesData = await getPublishedServices()
+const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
   const locations = await getLocations()
 
   const alert = () => {
@@ -92,37 +94,35 @@ export default async function Home() {
 
       {/* Services Section */}
        <section className="py-20">
-            <div className="container mx-auto px-4">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Practice Areas</h2>
-                <p className="text-gray-600 max-w-2xl mx-auto">
-                  Our experienced attorneys provide expert legal counsel across a wide range of practice areas, ensuring
-                  comprehensive support for all your legal needs.
-                </p>
-              </div>
-      
-              {services.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {services.map((service) => (
-                    <Link href={`/services/${service.slug}`} key={service.id}>
-                      {/* Pass the featured_image from your service object as the imageUrl prop.
-                      */}
-                      <ServiceCard 
-                        title={service.title} 
-                        imageUrl={service.featured_image} 
-                        standalone={true} 
-                      />
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <h3 className="text-xl font-semibold text-gray-600 mb-4">No services available</h3>
-                  <p className="text-gray-500">Please check back later for our legal services.</p>
-                </div>
-              )}
-            </div>
-          </section>
+  <div className="container mx-auto px-4">
+    <div className="text-center mb-16">
+      <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Practice Areas</h2>
+      <p className="text-gray-600 max-w-2xl mx-auto">
+        Our experienced attorneys provide expert legal counsel across a wide range of practice areas, ensuring
+        comprehensive support for all your legal needs.
+      </p>
+    </div>
+
+    {services.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {services.map((service) => (
+          <Link href={`/services/${service.slug}`} key={service.id}>
+            <ServiceCard 
+              title={service.title} 
+              imageUrl={service.featured_image} 
+              standalone={true} 
+            />
+          </Link>
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-12">
+        <h3 className="text-xl font-semibold text-gray-600 mb-4">No services available</h3>
+        <p className="text-gray-500">Please check back later for our legal services.</p>
+      </div>
+    )}
+  </div>
+</section>
 
       {/* Global Presence */}
       <section className="py-16 bg-gray-50">
