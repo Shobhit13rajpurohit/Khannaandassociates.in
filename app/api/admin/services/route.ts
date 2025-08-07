@@ -1,13 +1,12 @@
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { NextResponse } from "next/server"
 import { getServices, createService } from "@/lib/db"
-import { revalidate } from "@/lib/revalidate"
 
 export async function GET() {
   try {
-    const services = await getServices()
+    const servicesData = await getServices()
+    // Sort services alphabetically by title
+    const services = servicesData.sort((a, b) => a.title.localeCompare(b.title))
     return NextResponse.json(services)
   } catch (error) {
     console.error("API Error fetching services:", error)
@@ -22,26 +21,9 @@ export async function POST(request: Request) {
     if (!newService) {
       throw new Error("Failed to create service")
     }
-
-    // Revalidation logic
-    try {
-      const pathsToRevalidate = ["/services"]
-      if (newService.slug) {
-        pathsToRevalidate.push(`/services/${newService.slug}`)
-      }
-      await Promise.all(pathsToRevalidate.map(path => revalidate(path)))
-      console.log("Revalidation triggered for:", pathsToRevalidate)
-    } catch (revalError) {
-      console.error(
-        `Revalidation failed for service (slug: ${newService.slug}), but the service was created successfully. Please revalidate manually.`,
-        revalError,
-      )
-    }
-
     return NextResponse.json(newService, { status: 201 })
   } catch (error) {
     console.error("API Error creating service:", error)
-    const message = error instanceof Error ? error.message : "An unknown error occurred"
-    return NextResponse.json({ message: `Error creating service: ${message}` }, { status: 500 })
+    return NextResponse.json({ message: "Error creating service" }, { status: 500 })
   }
 }
