@@ -611,6 +611,7 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Pa
     const servicesCol = adminDb.collection("services");
     const servicesSnapshot = await servicesCol
       .where("status", "==", "published")
+<<<<<<< HEAD
       .orderBy("title", "asc") // Sort by title alphabetically
       .limit(limit)
       .select(
@@ -622,6 +623,10 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Pa
       )
       .get();
 
+=======
+      .get() // Get all first, then sort and limit client-side
+    
+>>>>>>> 06d33224a108331a59457c0a49883e7e6a6ca867
     const servicesList = servicesSnapshot.docs.map(doc => {
       const data = doc.data();
       return {
@@ -631,10 +636,24 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Pa
         description: data.description,
         featured_image: data.featured_image,
         key_points: data.key_points?.slice(0, 3) || [], // Limit key points
+<<<<<<< HEAD
       };
     });
 
     return servicesList;
+=======
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      } as Partial<Service>
+    })
+    
+    // Sort alphabetically by title and limit to specified number
+    return (servicesList as Service[])
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .slice(0, limit)
+      
+>>>>>>> 06d33224a108331a59457c0a49883e7e6a6ca867
   } catch (error) {
     console.error("Error fetching limited published services:", error);
     // Note: If you get an error about needing an index, you must create it in the Firebase console.
