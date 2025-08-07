@@ -592,9 +592,7 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Se
     const servicesCol = adminDb.collection("services")
     const servicesSnapshot = await servicesCol
       .where("status", "==", "published")
-      .orderBy("created_at", "desc")
-      .limit(limit)
-      .get()
+      .get() // Get all first, then sort and limit client-side
     
     const servicesList = servicesSnapshot.docs.map(doc => {
       const data = doc.data() as Service
@@ -611,7 +609,12 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Se
         updated_at: data.updated_at
       } as Partial<Service>
     })
-    return servicesList as Service[]
+    
+    // Sort alphabetically by title and limit to specified number
+    return (servicesList as Service[])
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .slice(0, limit)
+      
   } catch (error) {
     console.error("Error fetching limited published services:", error)
     return []

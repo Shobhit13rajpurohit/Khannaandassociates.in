@@ -23,6 +23,7 @@ export default function ServiceCard({ title, imageUrl, standalone = true }: Serv
           alt={title}
           fill
           className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
         <div className="absolute bottom-0 left-0 p-4">

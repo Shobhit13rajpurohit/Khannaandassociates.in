@@ -88,15 +88,18 @@ export default async function ServicePage({ params }: ServicePageProps) {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">{service.title}</h1>
             <p className="text-xl mb-8">{service.description}</p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
-                Schedule a Consultation
-              </Button>
-              <Button
+               <Link href="/#contact">
+                              <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+                                Schedule a Consultation
+                              </Button> 
+                            </Link>
+              <Link href= "/#contact"><Button
                 variant="outline"
                 className="bg-white text-[#1a3c61] hover:bg-[#4BB4E6] hover:text-white hover:border-[#4BB4E6] px-8 py-6 text-lg"
               >
                 Contact Us
               </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -190,15 +193,18 @@ export default async function ServicePage({ params }: ServicePageProps) {
             a consultation.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
-              Schedule a Consultation
-            </Button>
-            <Button
+             <Link href="/#contact">
+                            <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+                              Schedule a Consultation
+                            </Button> 
+                          </Link>
+            <Link href="/#contact"> <Button
               variant="outline"
               className="border-white text-white hover:bg-white hover:text-[#1a3c61] px-8 py-6 text-lg bg-transparent"
             >
               Contact Us
             </Button>
+            </Link>
           </div>
         </div>
       </section>
