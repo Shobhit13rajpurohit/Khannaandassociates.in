@@ -64,15 +64,24 @@ export async function getServices(): Promise<Service[]> {
   }
 }
 
-export async function getPublishedServices(): Promise<Service[]> {
+export async function getPublishedServices(): Promise<Partial<Service>[]> {
   try {
-    const servicesCol = adminDb.collection("services")
-    const servicesSnapshot = await servicesCol.where("status", "==", "published").orderBy("created_at", "desc").get()
-    const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service))
-    return servicesList
+    const servicesCol = adminDb.collection("services");
+    const servicesSnapshot = await servicesCol
+      .where("status", "==", "published")
+      .orderBy("created_at", "desc")
+      .select(
+        "title",
+        "slug",
+        "description",
+        "featured_image"
+      )
+      .get();
+    const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return servicesList;
   } catch (error) {
-    console.error("Error fetching published services:", error)
-    return []
+    console.error("Error fetching published services:", error);
+    return [];
   }
 }
 
@@ -467,17 +476,27 @@ export interface Location {
 }
 
 // Location operations
-export async function getLocations(): Promise<Location[]> {
+export async function getLocations(): Promise<Partial<Location>[]> {
   try {
-    const locationsCol = adminDb.collection("locations")
-    const locationsSnapshot = await locationsCol.orderBy("created_at", "desc").get()
+    const locationsCol = adminDb.collection("locations");
+    const locationsSnapshot = await locationsCol
+      .orderBy("created_at", "desc")
+      .select(
+        "name",
+        "slug",
+        "address",
+        "city",
+        "country",
+        "imageUrl"
+      )
+      .get();
     const locationsList = locationsSnapshot.docs.map(
-      doc => ({ id: doc.id, ...doc.data() } as Location)
-    )
-    return locationsList
+      doc => ({ id: doc.id, ...doc.data() })
+    );
+    return locationsList;
   } catch (error) {
-    console.error("Error fetching locations:", error)
-    return []
+    console.error("Error fetching locations:", error);
+    return [];
   }
 }
 
@@ -587,16 +606,24 @@ export async function getLocationBySlug(slug: string): Promise<Location | null> 
 }
 // Add these optimized functions to your db.ts file
 
-export async function getPublishedServicesLimited(limit: number = 6): Promise<Service[]> {
+export async function getPublishedServicesLimited(limit: number = 6): Promise<Partial<Service>[]> {
   try {
-    const servicesCol = adminDb.collection("services")
+    const servicesCol = adminDb.collection("services");
     const servicesSnapshot = await servicesCol
       .where("status", "==", "published")
-      .get() // Get all first, then sort and limit client-side
-    
+      .orderBy("title", "asc") // Sort by title alphabetically
+      .limit(limit)
+      .select(
+        "title",
+        "slug",
+        "description",
+        "featured_image",
+        "key_points"
+      )
+      .get();
+
     const servicesList = servicesSnapshot.docs.map(doc => {
-      const data = doc.data() as Service
-      // Remove large content field for homepage to reduce size
+      const data = doc.data();
       return {
         id: doc.id,
         title: data.title,
@@ -604,20 +631,15 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Se
         description: data.description,
         featured_image: data.featured_image,
         key_points: data.key_points?.slice(0, 3) || [], // Limit key points
-        status: data.status,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      } as Partial<Service>
-    })
-    
-    // Sort alphabetically by title and limit to specified number
-    return (servicesList as Service[])
-      .sort((a, b) => a.title.localeCompare(b.title))
-      .slice(0, limit)
-      
+      };
+    });
+
+    return servicesList;
   } catch (error) {
-    console.error("Error fetching limited published services:", error)
-    return []
+    console.error("Error fetching limited published services:", error);
+    // Note: If you get an error about needing an index, you must create it in the Firebase console.
+    // The error message will provide a direct link to create the index.
+    return [];
   }
 }
 
