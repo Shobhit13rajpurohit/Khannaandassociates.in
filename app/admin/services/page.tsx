@@ -21,7 +21,6 @@ export default function AdminServicesPage() {
     try {
       const token = localStorage.getItem("admin_token")
       const response = await fetch("/api/admin/services", {
-        cache: 'no-store',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -32,7 +31,9 @@ export default function AdminServicesPage() {
       }
 
       const data = await response.json()
-      setServices(data)
+      // Sort services alphabetically by title
+      const sortedServices = data.sort((a: Service, b: Service) => a.title.localeCompare(b.title))
+      setServices(sortedServices)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -56,7 +57,11 @@ export default function AdminServicesPage() {
         throw new Error("Failed to delete service")
       }
 
-      setServices(services.filter((service) => service.id !== id))
+      // Remove from state and maintain alphabetical order
+      const updatedServices = services
+        .filter((service) => service.id !== id)
+        .sort((a, b) => a.title.localeCompare(b.title))
+      setServices(updatedServices)
     } catch (err) {
       alert("Failed to delete service")
     }
