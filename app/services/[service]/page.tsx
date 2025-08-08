@@ -1,5 +1,5 @@
-
-export const dynamic  = 'force-dynamic';
+import { Suspense } from 'react';
+export const dynamic = 'force-dynamic';
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -53,27 +53,77 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
   }
 }
 
-export default async function ServicePage({ params }: ServicePageProps) {
-  let service
+// Related Services Component (for better code splitting)
+function RelatedServicesSkeleton() {
+  return (
+    <div className="mt-12">
+      <h2 className="text-2xl font-bold mb-6 text-[#1a3c61]">Related Services</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-64"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-  try {
-    service = await getService(params.service)
+async function RelatedServices({ currentServiceId }: { currentServiceId: string }) {
+  const allServicesData = await getPublishedServices();
+  const allServicesSorted = allServicesData.sort((a, b) => a.title.localeCompare(b.title));
+  const relatedServices = allServicesSorted.filter((s) => s.id !== currentServiceId).slice(0, 3);
 
-    if (!service || service.status !== "published") {
-      notFound()
-    }
-  } catch {
-    notFound()
+  if (relatedServices.length === 0) {
+    return null;
   }
 
-  // Get related services and sort alphabetically
-  const allServicesData = await getPublishedServices()
-  const allServicesSorted = allServicesData.sort((a, b) => a.title.localeCompare(b.title))
-  const relatedServices = allServicesSorted.filter((s) => s.id !== service.id).slice(0, 3)
+  return (
+    <div className="mt-12">
+      <h2 className="text-2xl font-bold mb-6 text-[#1a3c61]">Related Services</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {relatedServices.map((relatedService) => (
+          <Link key={relatedService.id} href={`/services/${relatedService.slug}`} prefetch={false}>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="relative h-48">
+                <Image
+                  src={relatedService.featured_image || "/placeholder.svg?height=400&width=600"}
+                  alt={relatedService.title}
+                  fill
+                  className="object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/90 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-4">
+                  <h3 className="text-xl font-semibold text-white">{relatedService.title}</h3>
+                </div>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-600 mb-4">{relatedService.description}</p>
+                <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white w-full">Learn More</Button>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default async function ServicePage({ params }: ServicePageProps) {
+  let service;
+
+  try {
+    service = await getService(params.service);
+
+    if (!service || service.status !== "published") {
+      notFound();
+    }
+  } catch {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section - Loads immediately with service data */}
       <section className="relative bg-[#1a3c61] text-white">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -89,17 +139,18 @@ export default async function ServicePage({ params }: ServicePageProps) {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">{service.title}</h1>
             <p className="text-xl mb-8">{service.description}</p>
             <div className="flex flex-col sm:flex-row gap-4">
-               <Link href="/#contact">
-                              <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
-                                Schedule a Consultation
-                              </Button> 
-                            </Link>
-              <Link href= "/#contact"><Button
-                variant="outline"
-                className="bg-white text-[#1a3c61] hover:bg-[#4BB4E6] hover:text-white hover:border-[#4BB4E6] px-8 py-6 text-lg"
-              >
-                Contact Us
-              </Button>
+              <Link href="/#contact">
+                <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+                  Schedule a Consultation
+                </Button> 
+              </Link>
+              <Link href="/#contact">
+                <Button
+                  variant="outline"
+                  className="bg-white text-[#1a3c61] hover:bg-[#4BB4E6] hover:text-white hover:border-[#4BB4E6] px-8 py-6 text-lg"
+                >
+                  Contact Us
+                </Button>
               </Link>
             </div>
           </div>
@@ -129,36 +180,10 @@ export default async function ServicePage({ params }: ServicePageProps) {
                 </div>
               )}
 
-              {/* Related Services */}
-              {relatedServices.length > 0 && (
-                <div className="mt-12">
-                  <h2 className="text-2xl font-bold mb-6 text-[#1a3c61]">Related Services</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {relatedServices.map((relatedService) => (
-                      <Link key={relatedService.id} href={`/services/${relatedService.slug}`}>
-                        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                          <div className="relative h-48">
-                            <Image
-                              src={relatedService.featured_image || "/placeholder.svg?height=400&width=600"}
-                              alt={relatedService.title}
-                              fill
-                              className="object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/90 to-transparent"></div>
-                            <div className="absolute bottom-0 left-0 p-4">
-                              <h3 className="text-xl font-semibold text-white">{relatedService.title}</h3>
-                            </div>
-                          </div>
-                          <div className="p-6">
-                            <p className="text-gray-600 mb-4">{relatedService.description}</p>
-                            <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white w-full">Learn More</Button>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Related Services with Suspense */}
+              <Suspense fallback={<RelatedServicesSkeleton />}>
+                <RelatedServices currentServiceId={service.id} />
+              </Suspense>
             </div>
 
             <div className="lg:w-1/3">
@@ -194,21 +219,22 @@ export default async function ServicePage({ params }: ServicePageProps) {
             a consultation.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-             <Link href="/#contact">
-                            <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
-                              Schedule a Consultation
-                            </Button> 
-                          </Link>
-            <Link href="/#contact"> <Button
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-[#1a3c61] px-8 py-6 text-lg bg-transparent"
-            >
-              Contact Us
-            </Button>
+            <Link href="/#contact">
+              <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white px-8 py-6 text-lg">
+                Schedule a Consultation
+              </Button> 
+            </Link>
+            <Link href="/#contact"> 
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-[#1a3c61] px-8 py-6 text-lg bg-transparent"
+              >
+                Contact Us
+              </Button>
             </Link>
           </div>
         </div>
       </section>
     </div>
-  )
+  );
 }
