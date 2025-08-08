@@ -52,32 +52,77 @@ export interface BlogPost {
 
 
 // Service operations
-export async function getServices(): Promise<Service[]> {
-  try {
-    const servicesCol = adminDb.collection("services")
-    const servicesSnapshot = await servicesCol.orderBy("created_at", "desc").get()
-    const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service))
-    return servicesList
-  } catch (error) {
-    console.error("Error fetching services:", error)
-    return []
-  }
+
+
+// Cache for frequently accessed data
+const serviceCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Helper function to check cache validity
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_TTL;
 }
 
-export async function getPublishedServices(): Promise<Partial<Service>[]> {
+export async function getServices(): Promise<Service[]> {
+  const cacheKey = 'all-services';
+  const cached = serviceCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   try {
     const servicesCol = adminDb.collection("services");
     const servicesSnapshot = await servicesCol
+      .orderBy("created_at", "desc")
+      .get();
+    
+    const servicesList = servicesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Service));
+    
+    // Cache the result
+    serviceCache.set(cacheKey, {
+      data: servicesList,
+      timestamp: Date.now()
+    });
+    
+    return servicesList;
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    return [];
+  }
+}
+
+export async function getPublishedServices(): Promise<Service[]> {
+  const cacheKey = 'published-services';
+  const cached = serviceCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
+  try {
+    const servicesCol = adminDb.collection("services");
+    
+    // Create composite index for better performance: status + created_at
+    const servicesSnapshot = await servicesCol
       .where("status", "==", "published")
       .orderBy("created_at", "desc")
-      .select(
-        "title",
-        "slug",
-        "description",
-        "featured_image"
-      )
       .get();
-    const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    const servicesList = servicesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Service));
+    
+    // Cache the result
+    serviceCache.set(cacheKey, {
+      data: servicesList,
+      timestamp: Date.now()
+    });
+    
     return servicesList;
   } catch (error) {
     console.error("Error fetching published services:", error);
@@ -85,18 +130,136 @@ export async function getPublishedServices(): Promise<Partial<Service>[]> {
   }
 }
 
+// Optimized version that uses document ID if slug follows a pattern
 export async function getService(slug: string): Promise<Service | null> {
+  const cacheKey = `service-${slug}`;
+  const cached = serviceCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
   try {
-    const servicesCol = adminDb.collection("services")
-    const servicesSnapshot = await servicesCol.where("slug", "==", slug).get()
+    const servicesCol = adminDb.collection("services");
+    
+    // Create index on slug field for better performance
+    const servicesSnapshot = await servicesCol
+      .where("slug", "==", slug)
+      .limit(1) // Only need one result
+      .get();
+    
     if (servicesSnapshot.empty) {
-      return null
+      serviceCache.set(cacheKey, { data: null, timestamp: Date.now() });
+      return null;
     }
-    const serviceDoc = servicesSnapshot.docs[0]
-    return { id: serviceDoc.id, ...serviceDoc.data() } as Service
+    
+    const serviceDoc = servicesSnapshot.docs[0];
+    const service = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
+    
+    // Cache the result
+    serviceCache.set(cacheKey, {
+      data: service,
+      timestamp: Date.now()
+    });
+    
+    return service;
   } catch (error) {
-    console.error("Error in getService:", error)
-    return null
+    console.error("Error in getService:", error);
+    return null;
+  }
+}
+
+export async function getServiceById(id: string): Promise<Service | null> {
+  const cacheKey = `service-id-${id}`;
+  const cached = serviceCache.get(cacheKey);
+  
+  if (cached && isCacheValid(cached.timestamp)) {
+    return cached.data;
+  }
+
+  try {
+    const serviceDocRef = adminDb.collection("services").doc(id);
+    const serviceDoc = await serviceDocRef.get();
+    
+    if (!serviceDoc.exists) {
+      serviceCache.set(cacheKey, { data: null, timestamp: Date.now() });
+      return null;
+    }
+    
+    const service = { id: serviceDoc.id, ...serviceDoc.data() } as Service;
+    
+    // Cache the result
+    serviceCache.set(cacheKey, {
+      data: service,
+      timestamp: Date.now()
+    });
+    
+    return service;
+  } catch (error) {
+    console.error("Error in getServiceById:", error);
+    return null;
+  }
+}
+
+// Clear cache when data is modified
+function clearServiceCache() {
+  serviceCache.clear();
+}
+
+export async function createService(
+  service: Omit<Service, "id" | "created_at" | "updated_at">,
+): Promise<Service | null> {
+  try {
+    const servicesCol = adminDb.collection("services");
+    const newService = {
+      ...service,
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
+    };
+    const docRef = await servicesCol.add(newService);
+    
+    // Clear cache after modification
+    clearServiceCache();
+    
+    return { id: docRef.id, ...newService };
+  } catch (error) {
+    console.error("Error in createService:", error);
+    return null;
+  }
+}
+
+export async function updateService(id: string, service: Partial<Service>): Promise<Service | null> {
+  try {
+    const serviceDocRef = adminDb.collection("services").doc(id);
+    const updatedService = {
+      ...service,
+      updated_at: Timestamp.now(),
+    };
+    await serviceDocRef.update(updatedService);
+    
+    // Clear cache after modification
+    clearServiceCache();
+    
+    const serviceDoc = await serviceDocRef.get();
+    return { id: serviceDoc.id, ...serviceDoc.data() } as Service;
+  } catch (error) {
+    console.error("Error in updateService:", error);
+    return null;
+  }
+}
+
+export async function deleteService(id: string): Promise<boolean> {
+  try {
+    const serviceDocRef = adminDb.collection("services").doc(id);
+    await serviceDocRef.delete();
+    
+    // Clear cache after modification
+    clearServiceCache();
+    
+    return true;
+  } catch (error) {
+    console.error("Error in deleteService:", error);
+    return false;
   }
 }
 
@@ -160,64 +323,7 @@ export async function deleteBlogPost(id: string): Promise<boolean> {
   }
 }
 
-export async function getServiceById(id: string): Promise<Service | null> {
-  try {
-    const serviceDocRef = adminDb.collection("services").doc(id)
-    const serviceDoc = await serviceDocRef.get()
-    if (!serviceDoc.exists) {
-      return null
-    }
-    return { id: serviceDoc.id, ...serviceDoc.data() } as Service
-  } catch (error) {
-    console.error("Error in getServiceById:", error)
-    return null
-  }
-}
 
-export async function createService(
-  service: Omit<Service, "id" | "created_at" | "updated_at">,
-): Promise<Service | null> {
-  try {
-    const servicesCol = adminDb.collection("services")
-    const newService = {
-      ...service,
-      created_at: Timestamp.now(),
-      updated_at: Timestamp.now(),
-    }
-    const docRef = await servicesCol.add(newService)
-    return { id: docRef.id, ...newService }
-  } catch (error) {
-    console.error("Error in createService:", error)
-    return null
-  }
-}
-
-export async function updateService(id: string, service: Partial<Service>): Promise<Service | null> {
-  try {
-    const serviceDocRef = adminDb.collection("services").doc(id)
-    const updatedService = {
-      ...service,
-      updated_at: Timestamp.now(),
-    }
-    await serviceDocRef.update(updatedService)
-    const serviceDoc = await serviceDocRef.get()
-    return { id: serviceDoc.id, ...serviceDoc.data() } as Service
-  } catch (error) {
-    console.error("Error in updateService:", error)
-    return null
-  }
-}
-
-export async function deleteService(id: string): Promise<boolean> {
-  try {
-    const serviceDocRef = adminDb.collection("services").doc(id)
-    await serviceDocRef.delete()
-    return true
-  } catch (error) {
-    console.error("Error in deleteService:", error)
-    return false
-  }
-}
 
 // Blog operations
 export async function getBlogPosts(): Promise<BlogPost[]> {
@@ -476,27 +582,17 @@ export interface Location {
 }
 
 // Location operations
-export async function getLocations(): Promise<Partial<Location>[]> {
+export async function getLocations(): Promise<Location[]> {
   try {
-    const locationsCol = adminDb.collection("locations");
-    const locationsSnapshot = await locationsCol
-      .orderBy("created_at", "desc")
-      .select(
-        "name",
-        "slug",
-        "address",
-        "city",
-        "country",
-        "imageUrl"
-      )
-      .get();
+    const locationsCol = adminDb.collection("locations")
+    const locationsSnapshot = await locationsCol.orderBy("created_at", "desc").get()
     const locationsList = locationsSnapshot.docs.map(
-      doc => ({ id: doc.id, ...doc.data() })
-    );
-    return locationsList;
+      doc => ({ id: doc.id, ...doc.data() } as Location)
+    )
+    return locationsList
   } catch (error) {
-    console.error("Error fetching locations:", error);
-    return [];
+    console.error("Error fetching locations:", error)
+    return []
   }
 }
 
@@ -606,29 +702,16 @@ export async function getLocationBySlug(slug: string): Promise<Location | null> 
 }
 // Add these optimized functions to your db.ts file
 
-export async function getPublishedServicesLimited(limit: number = 6): Promise<Partial<Service>[]> {
+export async function getPublishedServicesLimited(limit: number = 6): Promise<Service[]> {
   try {
-    const servicesCol = adminDb.collection("services");
+    const servicesCol = adminDb.collection("services")
     const servicesSnapshot = await servicesCol
       .where("status", "==", "published")
-<<<<<<< HEAD
-      .orderBy("title", "asc") // Sort by title alphabetically
-      .limit(limit)
-      .select(
-        "title",
-        "slug",
-        "description",
-        "featured_image",
-        "key_points"
-      )
-      .get();
-
-=======
       .get() // Get all first, then sort and limit client-side
     
->>>>>>> 06d33224a108331a59457c0a49883e7e6a6ca867
     const servicesList = servicesSnapshot.docs.map(doc => {
-      const data = doc.data();
+      const data = doc.data() as Service
+      // Remove large content field for homepage to reduce size
       return {
         id: doc.id,
         title: data.title,
@@ -636,12 +719,6 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Pa
         description: data.description,
         featured_image: data.featured_image,
         key_points: data.key_points?.slice(0, 3) || [], // Limit key points
-<<<<<<< HEAD
-      };
-    });
-
-    return servicesList;
-=======
         status: data.status,
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -653,12 +730,9 @@ export async function getPublishedServicesLimited(limit: number = 6): Promise<Pa
       .sort((a, b) => a.title.localeCompare(b.title))
       .slice(0, limit)
       
->>>>>>> 06d33224a108331a59457c0a49883e7e6a6ca867
   } catch (error) {
-    console.error("Error fetching limited published services:", error);
-    // Note: If you get an error about needing an index, you must create it in the Firebase console.
-    // The error message will provide a direct link to create the index.
-    return [];
+    console.error("Error fetching limited published services:", error)
+    return []
   }
 }
 
