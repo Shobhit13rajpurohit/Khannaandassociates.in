@@ -1,16 +1,92 @@
 import { getActiveTeamMembers, TeamMember } from "../../../lib/db"
 import TeamMemberCard from "../../../components/team-member"
 import { Metadata } from "next"
-import { Users } from "lucide-react"
+import { Users, RefreshCw } from "lucide-react"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
   title: "Our Team | Law Firm",
   description: "Meet the experienced and dedicated team of legal professionals at our law firm.",
 }
 
-export default async function TeamPage() {
+// Separate component for team content to enable better loading states
+async function TeamContent() {
+  console.log('TeamPage: Fetching active team members...')
   const teamMembers = await getActiveTeamMembers()
+  console.log('TeamPage: Found', teamMembers.length, 'active team members')
 
+  return (
+    <div className="container mx-auto px-4 py-16">
+      {teamMembers.length > 0 ? (
+        <>
+          <div className="text-center mb-12">
+            <div className="inline-block px-4 py-2 bg-[#4BB4E6]/10 text-[#1a3c61] rounded-full text-sm font-medium mb-4">
+              {teamMembers.length} Team Member{teamMembers.length !== 1 ? 's' : ''}
+            </div>
+            <p className="text-gray-600 text-sm">
+              Last updated: {new Date().toLocaleString()}
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {teamMembers.map((member) => (
+              <TeamMemberCard
+                key={`${member.id}-${member.updated_at}`} // Use composite key to force re-render on updates
+                name={member.name}
+                position={member.position}
+                image={member.image}
+                slug={member.slug}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-20">
+          <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+            <Users className="w-12 h-12 text-gray-400" />
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">No Team Members Found</h2>
+          <p className="text-gray-600 max-w-md mx-auto mb-6">
+            We're currently updating our team information. Please check back soon.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a3c61] text-white rounded-lg hover:bg-[#132e4a] transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh Page
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Loading component
+function TeamLoading() {
+  return (
+    <div className="container mx-auto px-4 py-16">
+      <div className="text-center mb-12">
+        <div className="inline-block px-4 py-2 bg-gray-200 animate-pulse rounded-full text-sm font-medium mb-4 w-32 h-8">
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+            <div className="h-64 bg-gray-200 animate-pulse"></div>
+            <div className="p-6">
+              <div className="h-6 bg-gray-200 animate-pulse rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default async function TeamPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
@@ -40,40 +116,10 @@ export default async function TeamPage() {
         </div>
       </div>
 
-      {/* Team Grid Section */}
-      <div className="container mx-auto px-4 py-16">
-        {teamMembers.length > 0 ? (
-          <>
-            <div className="text-center mb-12">
-              <div className="inline-block px-4 py-2 bg-[#4BB4E6]/10 text-[#1a3c61] rounded-full text-sm font-medium mb-4">
-                {teamMembers.length} Team Member{teamMembers.length !== 1 ? 's' : ''}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {teamMembers.map((member) => (
-                <TeamMemberCard
-                  key={member.id}
-                  name={member.name}
-                  position={member.position}
-                  image={member.image}
-                  slug={member.slug}
-                />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-20">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <Users className="w-12 h-12 text-gray-400" />
-            </div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">No Team Members Found</h2>
-            <p className="text-gray-600 max-w-md mx-auto">
-              We're currently updating our team information. Please check back soon.
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Team Grid Section with Suspense */}
+      <Suspense fallback={<TeamLoading />}>
+        <TeamContent />
+      </Suspense>
     </div>
   )
 }

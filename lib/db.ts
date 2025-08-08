@@ -719,11 +719,40 @@ export async function deleteService(id: string): Promise<boolean> {
 // TEAM MEMBER FUNCTIONS
 // =============================================================================
 
+
+// Clear all team-related cache entries
+ 
+  // Clear all cache entries that start with team-related keys
+  const keysToDelete = [];
+  
+  // If using Map-based cache
+  if (teamCache instanceof Map) {
+    for (const key of teamCache.keys()) {
+      if (key.includes('team-member') || key.includes('active-team-members') || key.includes('all-team-members')) {
+        keysToDelete.push(key);
+      }
+    }
+    keysToDelete.forEach(key => teamCache.delete(key));
+  }
+  
+  // If using object-based cache
+  else if (typeof teamCache === 'object') {
+    Object.keys(teamCache).forEach(key => {
+      if (key.includes('team-member') || key.includes('active-team-members') || key.includes('all-team-members')) {
+        delete teamCache[key];
+      }
+    });
+  }
+  
+  console.log('Team cache cleared:', keysToDelete.length, 'entries removed');
+
+
 export async function getTeamMembers(): Promise<TeamMember[]> {
   const cacheKey = getCacheKey('all-team-members')
   const cached = getCache(teamCache, cacheKey)
   
   if (cached) {
+    console.log('Returning cached team members:', cached.length)
     return cached
   }
 
@@ -732,6 +761,7 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
     const teamSnapshot = await teamCol.orderBy("created_at", "desc").get()
     const teamList = teamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember))
     
+    console.log('Fetched team members from DB:', teamList.length)
     setCache(teamCache, cacheKey, teamList, LONG_CACHE_TTL)
     return teamList
   } catch (error) {
@@ -745,6 +775,7 @@ export async function getActiveTeamMembers(): Promise<TeamMember[]> {
   const cached = getCache(teamCache, cacheKey)
   
   if (cached) {
+    console.log('Returning cached active team members:', cached.length)
     return cached
   }
 
@@ -756,6 +787,7 @@ export async function getActiveTeamMembers(): Promise<TeamMember[]> {
       .get()
     const teamList = teamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeamMember))
     
+    console.log('Fetched active team members from DB:', teamList.length)
     setCache(teamCache, cacheKey, teamList, LONG_CACHE_TTL)
     return teamList
   } catch (error) {
@@ -777,6 +809,7 @@ export async function getTeamMember(slug: string): Promise<TeamMember | null> {
     const teamSnapshot = await teamCol.where("slug", "==", slug).limit(1).get()
     
     if (teamSnapshot.empty) {
+      console.log('Team member not found by slug:', slug)
       setCache(teamCache, cacheKey, null, 5 * 60 * 1000)
       return null
     }
@@ -784,6 +817,7 @@ export async function getTeamMember(slug: string): Promise<TeamMember | null> {
     const teamDoc = teamSnapshot.docs[0]
     const member = { id: teamDoc.id, ...teamDoc.data() } as TeamMember
     
+    console.log('Found team member by slug:', slug, member.name)
     setCache(teamCache, cacheKey, member, LONG_CACHE_TTL)
     return member
   } catch (error) {
@@ -805,11 +839,13 @@ export async function getTeamMemberById(id: string): Promise<TeamMember | null> 
     const teamDoc = await teamDocRef.get()
     
     if (!teamDoc.exists) {
+      console.log('Team member not found by ID:', id)
       setCache(teamCache, cacheKey, null, 5 * 60 * 1000)
       return null
     }
     
     const member = { id: teamDoc.id, ...teamDoc.data() } as TeamMember
+    console.log('Found team member by ID:', id, member.name)
     setCache(teamCache, cacheKey, member, LONG_CACHE_TTL)
     return member
   } catch (error) {
@@ -822,15 +858,23 @@ export async function createTeamMember(
   member: Omit<TeamMember, "id" | "created_at" | "updated_at">
 ): Promise<TeamMember | null> {
   try {
+    console.log('Creating new team member:', member.name)
+    
     const teamCol = adminDb.collection("team_members")
     const newMember = {
       ...member,
       created_at: Timestamp.now(),
       updated_at: Timestamp.now(),
     }
+    
     const docRef = await teamCol.add(newMember)
+    const createdMember = { id: docRef.id, ...newMember }
+    
+    // Clear cache immediately after creating
     clearTeamCache()
-    return { id: docRef.id, ...newMember }
+    console.log('Team member created successfully:', createdMember.name, 'ID:', createdMember.id)
+    
+    return createdMember
   } catch (error) {
     console.error("Error in createTeamMember:", error)
     return null
@@ -839,15 +883,24 @@ export async function createTeamMember(
 
 export async function updateTeamMember(id: string, member: Partial<TeamMember>): Promise<TeamMember | null> {
   try {
+    console.log('Updating team member:', id)
+    
     const teamDocRef = adminDb.collection("team_members").doc(id)
-    const updatedMember = {
+    const updatedData = {
       ...member,
       updated_at: Timestamp.now(),
     }
-    await teamDocRef.update(updatedMember)
+    
+    await teamDocRef.update(updatedData)
+    
+    // Clear cache immediately after updating
     clearTeamCache()
+    
     const teamDoc = await teamDocRef.get()
-    return { id: teamDoc.id, ...teamDoc.data() } as TeamMember
+    const updatedMember = { id: teamDoc.id, ...teamDoc.data() } as TeamMember
+    
+    console.log('Team member updated successfully:', updatedMember.name)
+    return updatedMember
   } catch (error) {
     console.error("Error in updateTeamMember:", error)
     return null
@@ -856,13 +909,37 @@ export async function updateTeamMember(id: string, member: Partial<TeamMember>):
 
 export async function deleteTeamMember(id: string): Promise<boolean> {
   try {
+    console.log('Deleting team member:', id)
+    
     const teamDocRef = adminDb.collection("team_members").doc(id)
     await teamDocRef.delete()
+    
+    // Clear cache immediately after deleting
     clearTeamCache()
+    console.log('Team member deleted successfully:', id)
+    
     return true
   } catch (error) {
     console.error("Error in deleteTeamMember:", error)
     return false
+  }
+}
+
+// Optional: Add a function to force refresh team data
+export async function refreshTeamData(): Promise<void> {
+  try {
+    console.log('Force refreshing team data...')
+    clearTeamCache()
+    
+    // Pre-load fresh data
+    await Promise.all([
+      getTeamMembers(),
+      getActiveTeamMembers()
+    ])
+    
+    console.log('Team data refreshed successfully')
+  } catch (error) {
+    console.error('Error refreshing team data:', error)
   }
 }
 
