@@ -1,3 +1,4 @@
+// Optimized locations page with performance improvements
 export const dynamic = 'force-dynamic';
 
 import Image from "next/image"
@@ -5,10 +6,62 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import IndiaPresence from "@/components/india-presence"
 import { getLocations } from "@/lib/db"
+import { Suspense } from "react"
 
-export default async function LocationsPage() {
+// Loading component for better UX
+function LocationsLoading() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {[...Array(6)].map((_, index) => (
+        <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+          <div className="h-48 bg-gray-300"></div>
+          <div className="p-4">
+            <div className="h-4 bg-gray-300 rounded mb-2"></div>
+            <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Separate component for locations grid
+async function LocationsGrid() {
   const locations = await getLocations()
 
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {locations.map((location) => (
+        <Link href={`/locations/${location.slug}`} key={location.id} className="group">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div className="relative h-48 w-full">
+              <Image
+                src={location.imageUrl || "/placeholder.svg"}
+                alt={location.name}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority={false} // Don't prioritize these images
+                loading="lazy" // Lazy load images
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 p-4">
+                <h3 className="text-2xl font-semibold text-white">{location.name}</h3>
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="text-gray-700 line-clamp-2">{location.address}</p>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+export default async function LocationsPage() {
   return (
     <div className="min-h-screen">
       <section className="bg-[#1a3c61] text-white py-20">
@@ -28,30 +81,9 @@ export default async function LocationsPage() {
             <p className="text-gray-600 max-w-2xl mx-auto">Find the nearest Khanna and Associates office to you.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {locations.map((location, index) => (
-              <Link href={`/locations/${location.slug}`} key={index} className="group">
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                  <div className="relative h-48 w-full">
-                    <Image
-                      
-                      src={location.imageUrl || "/placeholder.svg"}
-                      alt={location.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 p-4">
-                      <h3 className="text-2xl font-semibold text-white">{location.name}</h3>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-gray-700">{location.address}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <Suspense fallback={<LocationsLoading />}>
+            <LocationsGrid />
+          </Suspense>
         </div>
       </section>
 
