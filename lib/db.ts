@@ -559,6 +559,7 @@ export async function deleteTeamMember(id: string): Promise<boolean> {
   }
 }
 
+
 export interface Location {
   id: string
   name: string
@@ -576,40 +577,146 @@ export interface Location {
   practice_areas?: string[]
   office_hours?: {
     weekdays: string
+    saturday?: string
+    sunday?: string
   }
+  map_image?: string
+  map_link?: string
   created_at: Timestamp
   updated_at: Timestamp
 }
 
-// Location operations
+// In-memory cache with TTL (Time To Live)
+const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+
+
+function getCacheKey(operation: string, params?: string): string {
+  return params ? `${operation}:${params}` : operation
+}
+
+function setCache(key: string, data: any, ttl: number = CACHE_TTL): void {
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl
+  })
+}
+
+function getCache(key: string): any | null {
+  const cached = cache.get(key)
+  if (!cached) return null
+  
+  const now = Date.now()
+  if (now - cached.timestamp > cached.ttl) {
+    cache.delete(key)
+    return null
+  }
+  
+  return cached.data
+}
+
+// Optimized: Added caching and error handling
 export async function getLocations(): Promise<Location[]> {
+  const cacheKey = getCacheKey('locations')
+  const cached = getCache(cacheKey)
+  
+  if (cached) {
+    console.log('🚀 Returning cached locations')
+    return cached
+  }
+
   try {
+    console.log('📡 Fetching locations from Firestore')
     const locationsCol = adminDb.collection("locations")
-    const locationsSnapshot = await locationsCol.orderBy("created_at", "desc").get()
-    const locationsList = locationsSnapshot.docs.map(
-      doc => ({ id: doc.id, ...doc.data() } as Location)
-    )
+    
+    // Use limit if you have many locations to reduce initial load
+    const locationsSnapshot = await locationsCol
+      .orderBy("created_at", "desc")
+      .get()
+    
+    const locationsList = locationsSnapshot.docs.map(doc => {
+      const data = doc.data()
+      return { 
+        id: doc.id, 
+        ...data,
+        // Ensure consistent data structure
+        contact_info: typeof data.contact_info === 'string' 
+          ? JSON.parse(data.contact_info) 
+          : data.contact_info
+      } as Location
+    })
+    
+    // Cache for 5 minutes
+    setCache(cacheKey, locationsList)
+    console.log(`✅ Cached ${locationsList.length} locations`)
+    
     return locationsList
   } catch (error) {
-    console.error("Error fetching locations:", error)
+    console.error("❌ Error fetching locations:", error)
     return []
   }
 }
 
-export async function getLocationById(id: string): Promise<Location | null> {
+// Optimized: Added caching and improved query
+export async function getLocationBySlug(slug: string): Promise<Location | null> {
+  const cacheKey = getCacheKey('location-by-slug', slug)
+  const cached = getCache(cacheKey)
+  
+  if (cached) {
+    console.log(`🚀 Returning cached location for slug: ${slug}`)
+    return cached
+  }
+
   try {
-    const locationDocRef = adminDb.collection("locations").doc(id)
-    const locationDoc = await locationDocRef.get()
-    if (!locationDoc.exists) {
+    console.log(`📡 Fetching location by slug: ${slug}`)
+    
+    // Create composite index in Firestore for better performance:
+    // Collection: locations, Fields: slug (Ascending), created_at (Descending)
+    const locationsCol = adminDb.collection("locations")
+    const locationsSnapshot = await locationsCol
+      .where("slug", "==", slug)
+      .limit(1) // Only get one document
+      .get()
+    
+    if (locationsSnapshot.empty) {
+      console.log(`❌ No location found for slug: ${slug}`)
+      setCache(cacheKey, null, 2 * 60 * 1000) // Cache null result for 2 minutes
       return null
     }
-    return { id: locationDoc.id, ...locationDoc.data() } as Location
+    
+    const locationDoc = locationsSnapshot.docs[0]
+    const data = locationDoc.data()
+    const location = { 
+      id: locationDoc.id, 
+      ...data,
+      // Ensure consistent data structure
+      contact_info: typeof data.contact_info === 'string' 
+        ? JSON.parse(data.contact_info) 
+        : data.contact_info
+    } as Location
+    
+    // Cache for 10 minutes (individual locations change less frequently)
+    setCache(cacheKey, location, 10 * 60 * 1000)
+    console.log(`✅ Cached location: ${location.name}`)
+    
+    return location
   } catch (error) {
-    console.error("Error in getLocationById:", error)
+    console.error(`❌ Error in getLocationBySlug for ${slug}:`, error)
     return null
   }
 }
 
+// Helper function to clear cache when data is updated
+export function clearLocationCache(slug?: string): void {
+  if (slug) {
+    cache.delete(getCacheKey('location-by-slug', slug))
+    console.log(`🗑️ Cleared cache for location: ${slug}`)
+  }
+  cache.delete(getCacheKey('locations'))
+  console.log('🗑️ Cleared locations cache')
+}
+
+// Update your existing CRUD operations to clear cache
 export async function createLocation(
   location: Omit<Location, "id" | "created_at" | "updated_at" | "slug">
 ): Promise<Location | null> {
@@ -623,6 +730,10 @@ export async function createLocation(
       updated_at: Timestamp.now(),
     }
     const docRef = await locationsCol.add(newLocation)
+    
+    // Clear cache after creating
+    clearLocationCache()
+    
     return { id: docRef.id, ...newLocation }
   } catch (error) {
     console.error("Error in createLocation:", error)
@@ -647,7 +758,12 @@ export async function updateLocation(
 
     await locationDocRef.update(updatedLocation)
     const locationDoc = await locationDocRef.get()
-    return { id: locationDoc.id, ...locationDoc.data() } as Location
+    const result = { id: locationDoc.id, ...locationDoc.data() } as Location
+    
+    // Clear cache after updating
+    clearLocationCache(result.slug)
+    
+    return result
   } catch (error) {
     console.error("Error in updateLocation:", error)
     return null
@@ -658,10 +774,36 @@ export async function deleteLocation(id: string): Promise<boolean> {
   try {
     const locationDocRef = adminDb.collection("locations").doc(id)
     await locationDocRef.delete()
+    
+    // Clear cache after deleting
+    clearLocationCache()
+    
     return true
   } catch (error) {
     console.error("Error in deleteLocation:", error)
     return false
+  }
+}
+
+// Keep the original getLocationById function
+export async function getLocationById(id: string): Promise<Location | null> {
+  try {
+    const locationDocRef = adminDb.collection("locations").doc(id)
+    const locationDoc = await locationDocRef.get()
+    if (!locationDoc.exists) {
+      return null
+    }
+    const data = locationDoc.data()
+    return { 
+      id: locationDoc.id, 
+      ...data,
+      contact_info: typeof data?.contact_info === 'string' 
+        ? JSON.parse(data.contact_info) 
+        : data?.contact_info
+    } as Location
+  } catch (error) {
+    console.error("Error in getLocationById:", error)
+    return null
   }
 }
 
@@ -686,20 +828,7 @@ export async function getRelatedBlogPosts(
     return []
   }
 }
-export async function getLocationBySlug(slug: string): Promise<Location | null> {
-  try {
-    const locationsCol = adminDb.collection("locations")
-    const locationsSnapshot = await locationsCol.where("slug", "==", slug).get()
-    if (locationsSnapshot.empty) {
-      return null
-    }
-    const locationDoc = locationsSnapshot.docs[0]
-    return { id: locationDoc.id, ...locationDoc.data() } as Location
-  } catch (error) {
-    console.error("Error in getLocationBySlug:", error)
-    return null
-  }
-}
+
 // Add these optimized functions to your db.ts file
 
 export async function getPublishedServicesLimited(limit: number = 6): Promise<Service[]> {
