@@ -64,7 +64,8 @@ export default function ServicesPage() {
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Legal Services</h1>
             <p className="text-xl mb-8">
-              Comprehensive legal expertise across multiple practice areas to serve your diverse legal needs.
+              Our experienced attorneys provide expert legal counsel across a wide range of practice areas, ensuring
+              comprehensive support for all your legal needs.
             </p>
           </div>
         </div>
@@ -73,13 +74,13 @@ export default function ServicesPage() {
       {/* Services Grid with Suspense */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          {/* <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4 text-[#1a3c61]">Practice Areas</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Our experienced attorneys provide expert legal counsel across a wide range of practice areas, ensuring
               comprehensive support for all your legal needs.
             </p>
-          </div>
+          </div> */}
 
           <Suspense fallback={<ServicesGridSkeleton />}>
             <ServicesGrid />
