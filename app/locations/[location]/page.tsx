@@ -1,4 +1,4 @@
-
+// Optimized location detail page
 export const dynamic = 'force-dynamic'
 
 import React from "react"
@@ -9,7 +9,6 @@ import { notFound } from "next/navigation"
 import { getLocationBySlug, getLocations } from "@/lib/db"
 import { MapPin, Phone, Mail, Globe, Users, Building } from "lucide-react"
 import type { Metadata } from "next"
-
 
 export async function generateMetadata({ params }: { params: { location: string } }): Promise<Metadata> {
   const location = await getLocationBySlug(params.location)
@@ -38,12 +37,17 @@ export async function generateMetadata({ params }: { params: { location: string 
   }
 }
 
-
+// Enable static generation for better performance
 export async function generateStaticParams() {
-  const locations = await getLocations()
-  return locations.map(location => ({
-    location: location.slug,
-  }))
+  try {
+    const locations = await getLocations()
+    return locations.map(location => ({
+      location: location.slug,
+    }))
+  } catch (error) {
+    console.error("Error generating static params:", error)
+    return []
+  }
 }
 
 export default async function LocationDetailPage({ params }: { params: { location: string } }) {
@@ -53,21 +57,31 @@ export default async function LocationDetailPage({ params }: { params: { locatio
     notFound()
   }
 
- 
-  const mapImage = location.map_image || "https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?q=80&w=2031";
+  // Optimize image loading
+  const mapImage = location.map_image || "https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?q=80&w=2031"
+  const heroImage = location.imageUrl || "/placeholder.svg"
 
+  // Ensure contact_info is properly typed
+  const contactInfo = typeof location.contact_info === 'string' 
+    ? JSON.parse(location.contact_info) 
+    : location.contact_info
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section with optimized background */}
       <section className="relative bg-[#1a3c61] text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('${location.imageUrl || "/placeholder.svg"}')`,
-            filter: "brightness(0.4)",
-          }}
-        ></div>
+        <div className="absolute inset-0">
+          <Image
+            src={heroImage}
+            alt={`${location.name} office`}
+            fill
+            className="object-cover opacity-40"
+            priority
+            sizes="100vw"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+          />
+        </div>
         <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Top Law Firm in {location.name}</h1>
@@ -82,19 +96,21 @@ export default async function LocationDetailPage({ params }: { params: { locatio
           <div className="flex flex-col lg:flex-row gap-12">
             <div className="lg:w-2/3">
               <h2 className="text-3xl font-bold mb-6 text-[#1a3c61]">About Our {location.name} Office</h2>
-              <p className="text-gray-700 mb-8">{location.about_office}</p>
+              {location.about_office && (
+                <p className="text-gray-700 mb-8">{location.about_office}</p>
+              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <div className="flex items-center mb-3">
-                    <Building className="h-6 w-6 text-[#4BB4E6] mr-2" />
-                    <h3 className="font-semibold text-[#1a3c61]">Established</h3>
+              {location.established && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="flex items-center mb-3">
+                      <Building className="h-6 w-6 text-[#4BB4E6] mr-2" />
+                      <h3 className="font-semibold text-[#1a3c61]">Established</h3>
+                    </div>
+                    <p className="text-gray-700">{location.established}</p>
                   </div>
-                  <p className="text-gray-700">{location.established}</p>
                 </div>
-               
-               
-              </div>
+              )}
 
               {location.practice_areas && location.practice_areas.length > 0 && (
                 <>
@@ -109,9 +125,6 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                   </div>
                 </>
               )}
-              
-            
-
 
               <h3 className="text-2xl font-semibold mb-4 text-[#1a3c61]">Location</h3>
               <div className="rounded-lg overflow-hidden h-[400px] relative mb-8">
@@ -120,11 +133,17 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                   alt={`Map of ${location.name} Office`}
                   fill
                   className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Link href={location.map_link} target="_blank" rel="noopener noreferrer">
-                    <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white">View on Google Maps</Button>
-                  </Link>
+                  {location.map_link && (
+                    <Link href={location.map_link} target="_blank" rel="noopener noreferrer">
+                      <Button className="bg-[#4BB4E6] hover:bg-[#3a9fd1] text-white">
+                        View on Google Maps
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -138,16 +157,20 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                       <MapPin className="h-5 w-5 text-[#4BB4E6] mt-0.5 mr-3 flex-shrink-0" />
                       <p className="text-gray-700">{location.address}, {location.city}, {location.country}</p>
                     </div>
-                    {typeof location.contact_info === 'object' && (
+                    {contactInfo && typeof contactInfo === 'object' && (
                       <>
-                        <div className="flex items-center">
-                          <Phone className="h-5 w-5 text-[#4BB4E6] mr-3 flex-shrink-0" />
-                          <p className="text-gray-700">{location.contact_info.phone}</p>
-                        </div>
-                        <div className="flex items-center">
-                          <Mail className="h-5 w-5 text-[#4BB4E6] mr-3 flex-shrink-0" />
-                          <p className="text-gray-700">{location.contact_info.email}</p>
-                        </div>
+                        {contactInfo.phone && (
+                          <div className="flex items-center">
+                            <Phone className="h-5 w-5 text-[#4BB4E6] mr-3 flex-shrink-0" />
+                            <p className="text-gray-700">{contactInfo.phone}</p>
+                          </div>
+                        )}
+                        {contactInfo.email && (
+                          <div className="flex items-center">
+                            <Mail className="h-5 w-5 text-[#4BB4E6] mr-3 flex-shrink-0" />
+                            <p className="text-gray-700">{contactInfo.email}</p>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
@@ -157,18 +180,24 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                   <div className="p-6 border-b border-gray-200">
                     <h3 className="text-xl font-semibold mb-4 text-[#1a3c61]">Office Hours</h3>
                     <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <p className="text-gray-600">Monday - Friday:</p>
-                        <p className="text-gray-700 font-medium">{location.office_hours.weekdays}</p>
-                      </div>
-                      <div className="flex justify-between">
-                        <p className="text-gray-600">Saturday:</p>
-                        <p className="text-gray-700 font-medium">{location.office_hours.saturday}</p>
-                      </div>
-                      <div className="flex justify-between">
-                        <p className="text-gray-600">Sunday:</p>
-                        <p className="text-gray-700 font-medium">{location.office_hours.sunday}</p>
-                      </div>
+                      {location.office_hours.weekdays && (
+                        <div className="flex justify-between">
+                          <p className="text-gray-600">Monday - Friday:</p>
+                          <p className="text-gray-700 font-medium">{location.office_hours.weekdays}</p>
+                        </div>
+                      )}
+                      {location.office_hours.saturday && (
+                        <div className="flex justify-between">
+                          <p className="text-gray-600">Saturday:</p>
+                          <p className="text-gray-700 font-medium">{location.office_hours.saturday}</p>
+                        </div>
+                      )}
+                      {location.office_hours.sunday && (
+                        <div className="flex justify-between">
+                          <p className="text-gray-600">Sunday:</p>
+                          <p className="text-gray-700 font-medium">{location.office_hours.sunday}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -179,13 +208,13 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                       Schedule a Consultation
                     </Button>
                   </Link>
-                   {typeof location.contact_info === 'object' && (
-                      <Link href={`mailto:${location.contact_info.email}`}>
-                        <Button variant="outline" className="w-full border-[#1a3c61] text-[#1a3c61]">
-                          Contact This Office
-                        </Button>
-                      </Link>
-                   )}
+                  {contactInfo && typeof contactInfo === 'object' && contactInfo.email && (
+                    <Link href={`mailto:${contactInfo.email}`}>
+                      <Button variant="outline" className="w-full border-[#1a3c61] text-[#1a3c61]">
+                        Contact This Office
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
