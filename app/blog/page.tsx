@@ -4,11 +4,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Calendar, User, Tag } from "lucide-react"
-import { getPublishedBlogPosts } from "@/lib/db"
+import { getBlogPostsForListing } from "@/lib/db" // Use the optimized function
 import { format } from "date-fns"
 
 export default async function BlogPage() {
-  const blogPosts = await getPublishedBlogPosts()
+  // Use the optimized function that returns only necessary fields
+  const blogPosts = await getBlogPostsForListing()
 
   return (
     <div className="min-h-screen">
@@ -45,15 +46,19 @@ export default async function BlogPage() {
                   <div className="relative h-48">
                     <Image
                       src={post.featured_image || "/placeholder.svg?height=400&width=600"}
-                      alt={post.title}
+                      alt={post.title || "Blog post"}
                       fill
                       className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false} // Don't prioritize all images
                     />
                   </div>
                   <div className="p-6">
                     <div className="flex items-center text-sm text-gray-500 mb-3">
                       <Calendar className="h-4 w-4 mr-1" />
-                      <span className="mr-4">{format(post.created_at.toDate(), "MMMM dd, yyyy")}</span>
+                      <span className="mr-4">
+                        {post.created_at ? format(post.created_at.toDate(), "MMMM dd, yyyy") : ""}
+                      </span>
                       <User className="h-4 w-4 mr-1" />
                       <span>{post.author?.name || "Admin"}</span>
                     </div>
