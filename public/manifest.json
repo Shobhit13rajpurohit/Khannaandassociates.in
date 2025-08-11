@@ -1,0 +1,37 @@
+export const manifestJson = {
+  "name": "Khanna and Associates - Premier Law Firm",
+  "short_name": "Khanna Associates",
+  "description": "Premier law firm in Delhi, Jaipur & Dehradun providing expert legal services since 1948",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a3c61",
+  "orientation": "portrait-primary",
+  "categories": ["business", "professional", "legal"],
+  "lang": "en-IN",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/android-icon-36x36.png",
+      "sizes": "36x36",
+      "type": "image/png",
+      "density": "0.75"
+    },
+    {
+      "src": "/android-icon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "density": "1.0"
+    },
+    {
+      "src": "/android-icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "density": "1.5"
+    },
+    {
+      "src": "/android-icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "density": "2.0"
+    

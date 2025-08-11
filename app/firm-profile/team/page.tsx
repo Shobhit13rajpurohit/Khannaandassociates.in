@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 import { getActiveTeamMembers, TeamMember } from "../../../lib/db"
 import TeamMemberCard from "../../../components/team-member"
 import { Metadata } from "next"
