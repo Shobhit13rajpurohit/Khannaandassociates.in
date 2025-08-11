@@ -8,9 +8,9 @@ import { getService, getPublishedServices } from "@/lib/db"
 import type { Metadata } from "next"
 
 interface ServicePageProps {
-  params: {
+  params: Promise<{
     service: string
-  }
+  }>
 }
 
 export async function generateStaticParams() {
@@ -26,7 +26,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
   try {
-    const service = await getService(params.service)
+    const resolvedParams = await params;
+    const service = await getService(resolvedParams.service)
 
     if (!service || service.status !== "published") {
       return {
@@ -110,9 +111,10 @@ async function RelatedServices({ currentServiceId }: { currentServiceId: string 
 
 export default async function ServicePage({ params }: ServicePageProps) {
   let service;
+  const resolvedParams = await params;
 
   try {
-    service = await getService(params.service);
+    service = await getService(resolvedParams.service);
 
     if (!service || service.status !== "published") {
       notFound();
