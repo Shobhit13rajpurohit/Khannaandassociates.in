@@ -803,7 +803,7 @@ export default function BlogEditorPage() {
                                   {openGraphDescription || metaDescription || "Your description here"}
                                 </p>
                                 <p className="text-gray-400 text-xs mt-1 uppercase">
-                                  khannaandassociates.com
+                                  khannaandassociates.in
                                 </p>
                               </div>
                             </div>

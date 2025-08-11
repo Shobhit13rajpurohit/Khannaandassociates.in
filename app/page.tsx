@@ -20,11 +20,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Best Law Firm in Delhi, Jaipur & Dehradun | Khanna and Associates",
     description: "75+ years of legal excellence. Expert legal services across India. Corporate law, IP, litigation specialists. Free consultation available.",
-    url: "https://www.khannaandassociates.com/",
+    url: "https://www.khannaandassociates.in/",
     type: "website",
     images: [
       {
-        url: "https://www.khannaandassociates.com/images/homepage-og.jpg",
+        url: "https://www.khannaandassociates.in/images/homepage-og.jpg",
         width: 1200,
         height: 630,
         alt: "Khanna and Associates - Premier Law Firm"
@@ -48,11 +48,11 @@ export default async function Home() {
     "@type": "WebPage",
     name: "Home - Khanna and Associates Law Firm",
     description: "Premier law firm in Delhi, Jaipur & Dehradun providing expert legal services since 1948",
-    url: "https://www.khannaandassociates.com/",
+    url: "https://www.khannaandassociates.in/",
     mainEntity: {
       "@type": "LegalService",
       name: "Khanna and Associates",
-      url: "https://www.khannaandassociates.com/"
+      url: "https://www.khannaandassociates.in/"
     },
     breadcrumb: {
       "@type": "BreadcrumbList",
@@ -61,7 +61,7 @@ export default async function Home() {
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: "https://www.khannaandassociates.com/"
+          item: "https://www.khannaandassociates.in/"
         }
       ]
     },
@@ -589,8 +589,8 @@ export default async function Home() {
                       </p>
                       <p>
                         <strong>Email:</strong> 
-                        <a href="mailto:info@khannaandassociates.com" className="text-[#4BB4E6] hover:underline ml-1">
-                          info@khannaandassociates.com
+                        <a href="mailto:info@khannaandassociates.in" className="text-[#4BB4E6] hover:underline ml-1">
+                          info@khannaandassociates.in
                         </a>
                       </p>
                       <p className="text-gray-500 mt-2">

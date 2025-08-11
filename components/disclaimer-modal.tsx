@@ -44,7 +44,7 @@ export default function DisclaimerModal() {
           <div className="space-y-4 text-gray-700">
             <p>
               The Bar Council of India does not permit advertisement or solicitation by advocates in any form or manner.
-              By accessing this website, www.khannaandassociates.com, you acknowledge and confirm that you are seeking
+              By accessing this website, www.khannaandassociates.in, you acknowledge and confirm that you are seeking
               information relating to Khanna and Associates of your own accord and that there has been no form of
               solicitation, advertisement or inducement by Khanna and Associates or its members.
             </p>

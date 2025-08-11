@@ -20,17 +20,17 @@ const jsonLd = {
   alternateName: "Khanna & Associates Law Firm",
   legalName: "Khanna and Associates Legal Services",
   image: [
-    "https://www.khannaandassociates.com/logo.png",
-    "https://www.khannaandassociates.com/office-exterior.jpg",
-    "https://www.khannaandassociates.com/team-photo.jpg"
+    "https://www.khannaandassociates.in/logo.png",
+    "https://www.khannaandassociates.in/office-exterior.jpg",
+    "https://www.khannaandassociates.in/team-photo.jpg"
   ],
   logo: {
     "@type": "ImageObject",
-    url: "https://www.khannaandassociates.com/logo.png",
+    url: "https://www.khannaandassociates.in/logo.png",
     width: 300,
     height: 100
   },
-  url: "https://www.khannaandassociates.com/",
+  url: "https://www.khannaandassociates.in/",
   sameAs: [
     "https://www.facebook.com/khannaandassociates",
     "https://www.linkedin.com/company/khanna-and-associates",
@@ -39,7 +39,7 @@ const jsonLd = {
     "https://www.instagram.com/khannaassociates"
   ],
   telephone: ["+91946162007", "+91-11-4567-8900", "+91-141-2345-678"],
-  email: "info@khannaandassociates.com",
+  email: "info@khannaandassociates.in",
   description: "Premier law firm in Delhi, Jaipur and Dehradun providing comprehensive legal services since 1948. Specializing in corporate law, intellectual property, banking & finance, litigation, and real estate law.",
   slogan: "Excellence in Legal Services Since 1948",
   foundingDate: "1948-01-01",
@@ -381,32 +381,32 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Khanna and Associates - Premier Law Firm in Delhi, Jaipur & Dehradun Since 1948",
     description: "India's trusted legal excellence for 75+ years. Expert services in corporate law, IP, litigation & more. Free consultation. Offices in Delhi, Jaipur, Dehradun.",
-    url: "https://www.khannaandassociates.com/",
+    url: "https://www.khannaandassociates.in/",
     siteName: "Khanna and Associates Law Firm",
     locale: "en_IN",
     type: "website",
     images: [
       {
-        url: "https://www.khannaandassociates.com/og-image-main.jpg",
+        url: "https://www.khannaandassociates.in/og-image-main.jpg",
         width: 1200,
         height: 630,
         alt: "Khanna and Associates - Premier Law Firm in Delhi, Jaipur & Dehradun"
       },
       {
-        url: "https://www.khannaandassociates.com/og-image-office.jpg", 
+        url: "https://www.khannaandassociates.in/og-image-office.jpg", 
         width: 1200,
         height: 630,
         alt: "Khanna and Associates Law Firm Office"
       },
       {
-        url: "https://www.khannaandassociates.com/og-image-team.jpg",
+        url: "https://www.khannaandassociates.in/og-image-team.jpg",
         width: 1200, 
         height: 630,
         alt: "Khanna and Associates Legal Team"
       }
     ],
     // Additional OpenGraph properties
-    emails: ["info@khannaandassociates.com", "contact@khannaandassociates.com"],
+    emails: ["info@khannaandassociates.in", "contact@khannaandassociates.in"],
     phoneNumbers: ["+91946162007", "+91-11-4567-8900", "+91-141-2345-678"],
     faxNumbers: ["+91-11-4567-8901"],
     countryName: "India"
@@ -419,15 +419,15 @@ export const metadata: Metadata = {
     creator: "@khannaassociates", 
     title: "Khanna and Associates - Top Law Firm in Delhi, Jaipur & Dehradun",
     description: "75+ years of legal excellence in India. Expert corporate law, IP, litigation services. Free consultation available. Trusted by 1000+ clients.",
-    images: ["https://www.khannaandassociates.com/twitter-card-image.jpg"]
+    images: ["https://www.khannaandassociates.in/twitter-card-image.jpg"]
   },
   
   // Canonical and alternate URLs
   alternates: {
-    canonical: "https://www.khannaandassociates.com/",
+    canonical: "https://www.khannaandassociates.in/",
     languages: {
-      'en-IN': 'https://www.khannaandassociates.com/',
-      'hi-IN': 'https://www.khannaandassociates.com/hi/',
+      'en-IN': 'https://www.khannaandassociates.in/',
+      'hi-IN': 'https://www.khannaandassociates.in/hi/',
     }
   },
   
@@ -458,7 +458,7 @@ export const metadata: Metadata = {
   generator: "Next.js",
   applicationName: "Khanna and Associates Law Firm",
   referrer: "origin-when-cross-origin",
-  authors: [{ name: "Khanna and Associates", url: "https://www.khannaandassociates.com" }],
+  authors: [{ name: "Khanna and Associates", url: "https://www.khannaandassociates.in" }],
   creator: "Khanna and Associates",
   publisher: "Khanna and Associates",
   category: "Legal Services",
@@ -592,9 +592,9 @@ export default function RootLayout({
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         
         {/* Hreflang for international SEO */}
-        <link rel="alternate" hrefLang="en-in" href="https://www.khannaandassociates.com/" />
-        <link rel="alternate" hrefLang="hi-in" href="https://www.khannaandassociates.com/hi/" />
-        <link rel="alternate" hrefLang="x-default" href="https://www.khannaandassociates.com/" />
+        <link rel="alternate" hrefLang="en-in" href="https://www.khannaandassociates.in/" />
+        <link rel="alternate" hrefLang="hi-in" href="https://www.khannaandassociates.in/hi/" />
+        <link rel="alternate" hrefLang="x-default" href="https://www.khannaandassociates.in/" />
       </head>
       <body className={inter.className}>
         <ThemeProvider

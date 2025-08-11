@@ -6,15 +6,68 @@ import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Search } from "lucide-react"
+import { Menu, X, Search, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearch, setShowSearch] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const router = useRouter()
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Services list (alphabetically sorted)
+  const services = [
+    "Arbitration and Reconciliation",
+    "Aviation & Defence",
+    "Banking and Finance & Insurance",
+    "Bankruptcy and Insolvency",
+    "Capital Markets",
+    "Competition/Antitrust",
+    "Corporate and Commercial",
+    "Criminal & Civil",
+    "Energy and Natural Resources",
+    "Financial Services & Fintech",
+    "Funds",
+    "Healthcare and Life Sciences",
+    "Immigration",
+    "Information Technology",
+    "Intellectual Property",
+    "International Domain",
+    "Legal Outsourcing Work(LPO)",
+    "Matrimonial",
+    "Media and Entertainment",
+    "Private Client practice",
+    "Real Estate",
+    "Taxation (Direct and Indirect Taxation)",
+    "Technology Media and Telecom"
+  ].sort()
+
+  // Locations list (alphabetically sorted)
+  const locations = [
+    "Ahmedabad",
+    "Bangalore",
+    "Bhopal",
+    "Chandigarh",
+    "Chennai",
+    "Dehradun",
+    "Delhi",
+    "Goa",
+    "Guwahati",
+    "Hyderabad",
+    "Indore",
+    "Jaipur",
+    "Kochi",
+    "Kolkata",
+    "Lucknow",
+    "Mumbai",
+    "Nagpur",
+    "Patna",
+    "Pune",
+    "Surat",
+    "Vadodara"
+  ].sort()
 
   // Close search when clicking outside
   useEffect(() => {
@@ -46,6 +99,15 @@ export default function Header() {
     }
   }
 
+  const generateSlug = (text: string) => {
+    return text.toLowerCase()
+      .replace(/[&]/g, 'and')
+      .replace(/[()]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -65,12 +127,69 @@ export default function Header() {
           <Link href="/" className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base">
             Home
           </Link>
-          <Link href="/services" className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base">
-            Services
-          </Link>
-          <Link href="/locations" className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base">
-            Locations
-          </Link>
+          
+          {/* Services Mega Menu */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => setActiveDropdown('services')}
+            onMouseLeave={() => setActiveDropdown(null)}
+          >
+            <Link 
+              href="/services" 
+              className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base flex items-center"
+            >
+              Services
+              <ChevronDown className="ml-1 h-4 w-4" />
+            </Link>
+            
+            {activeDropdown === 'services' && (
+              <div className="absolute top-full left-0 mt-2 w-[600px] bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50">
+                <div className="grid grid-cols-3 gap-4 px-4">
+                  {services.map((service) => (
+                    <Link
+                      key={service}
+                      href={`/services/${generateSlug(service)}`}
+                      className="block px-4 py-2 text-sm text-[#1a3c61] hover:bg-gray-50 hover:text-[#4BB4E6] transition-colors"
+                    >
+                      {service}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Locations Mega Menu */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => setActiveDropdown('locations')}
+            onMouseLeave={() => setActiveDropdown(null)}
+          >
+            <Link 
+              href="/locations" 
+              className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base flex items-center"
+            >
+              Locations
+              <ChevronDown className="ml-1 h-4 w-4" />
+            </Link>
+            
+            {activeDropdown === 'locations' && (
+              <div className="absolute top-full left-0 mt-2 w-[400px] bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50">
+                <div className="grid grid-cols-3 gap-4 px-4">
+                  {locations.map((location) => (
+                    <Link
+                      key={location}
+                      href={`/locations/${generateSlug(location)}`}
+                      className="block px-3 py-2 text-sm text-[#1a3c61] hover:bg-gray-50 hover:text-[#4BB4E6] transition-colors"
+                    >
+                      {location}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <Link href="/firm-profile" className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base">
             Firm Profile
           </Link>
@@ -141,20 +260,57 @@ export default function Header() {
             >
               Home
             </Link>
-            <Link
-              href="/services"
-              className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Services
-            </Link>
-            <Link
-              href="/locations"
-              className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Locations
-            </Link>
+            
+            {/* Mobile Services with Expandable Menu */}
+            <div>
+              <button
+                className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium py-2 flex items-center justify-between w-full"
+                onClick={() => setActiveDropdown(activeDropdown === 'services' ? null : 'services')}
+              >
+                Services
+                <ChevronDown className={`h-4 w-4 transform transition-transform ${activeDropdown === 'services' ? 'rotate-180' : ''}`} />
+              </button>
+              {activeDropdown === 'services' && (
+                <div className="pl-4 mt-2 grid grid-cols-2 gap-2">
+                  {services.map((service) => (
+                    <Link
+                      key={service}
+                      href={`/services/${generateSlug(service)}`}
+                      className="block text-sm text-[#1a3c61] hover:text-[#4BB4E6] py-1"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {service}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Locations with Expandable Menu */}
+            <div>
+              <button
+                className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium py-2 flex items-center justify-between w-full"
+                onClick={() => setActiveDropdown(activeDropdown === 'locations' ? null : 'locations')}
+              >
+                Locations
+                <ChevronDown className={`h-4 w-4 transform transition-transform ${activeDropdown === 'locations' ? 'rotate-180' : ''}`} />
+              </button>
+              {activeDropdown === 'locations' && (
+                <div className="pl-4 mt-2 grid grid-cols-2 gap-2">
+                  {locations.map((location) => (
+                    <Link
+                      key={location}
+                      href={`/locations/${generateSlug(location)}`}
+                      className="block text-sm text-[#1a3c61] hover:text-[#4BB4E6] py-1"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {location}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Link
               href="/firm-profile"
               className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium py-2"
