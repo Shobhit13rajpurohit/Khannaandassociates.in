@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import IndiaPresence from "@/components/india-presence"
 import { getLocations } from "@/lib/db"
 import { Suspense } from "react"
+import type { Location } from "@/lib/db"
 
 // Loading component for better UX
 function LocationsLoading() {
@@ -28,34 +29,81 @@ function LocationsLoading() {
 // Separate component for locations grid
 async function LocationsGrid() {
   const locations = await getLocations()
+  
+  const hierarchicalLocations = locations.reduce((acc, location) => {
+    if (location.parent_id) {
+      const parent = acc.find(l => l.id === location.parent_id)
+      if (parent) {
+        if (!parent.sub_offices) {
+          parent.sub_offices = []
+        }
+        parent.sub_offices.push(location)
+      }
+    } else {
+      acc.push(location)
+    }
+    return acc
+  }, [] as Location[])
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {locations.map((location) => (
-        <Link href={`/locations/${location.slug}`} key={location.id} className="group">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div className="relative h-48 w-full">
-              <Image
-                src={location.imageUrl || "/placeholder.svg"}
-                alt={location.name}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority={false} // Don't prioritize these images
-                loading="lazy" // Lazy load images
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-4">
-                <h3 className="text-2xl font-semibold text-white">{location.name}</h3>
+    <div className="space-y-12">
+      {hierarchicalLocations.map((location) => (
+        <div key={location.id}>
+          <Link href={`/locations/${location.slug}`} className="group">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-64 w-full">
+                <Image
+                  src={location.imageUrl || "/placeholder.svg"}
+                  alt={location.name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  priority={false}
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-6">
+                  <h3 className="text-3xl font-bold text-white">{location.name}</h3>
+                </div>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-700 text-lg line-clamp-2">{location.address}</p>
               </div>
             </div>
-            <div className="p-4">
-              <p className="text-gray-700 line-clamp-2">{location.address}</p>
+          </Link>
+          {location.sub_offices && location.sub_offices.length > 0 && (
+            <div className="mt-8">
+              <h4 className="text-2xl font-bold text-[#1a3c61] mb-4 ml-4">Sub-Offices</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {location.sub_offices.map((subOffice) => (
+                  <Link href={`/locations/${location.slug}/${subOffice.slug}`} key={subOffice.id} className="group">
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={subOffice.imageUrl || "/placeholder.svg"}
+                          alt={subOffice.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          loading="lazy"
+                        />
+                         <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 p-4">
+                          <h3 className="text-2xl font-semibold text-white">{subOffice.name}</h3>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-gray-700 line-clamp-2">{subOffice.address}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </Link>
+          )}
+        </div>
       ))}
     </div>
   )
@@ -76,8 +124,6 @@ export default async function LocationsPage() {
 
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          
-
           <Suspense fallback={<LocationsLoading />}>
             <LocationsGrid />
           </Suspense>

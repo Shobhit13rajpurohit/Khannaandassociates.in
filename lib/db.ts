@@ -76,7 +76,7 @@ export interface Location {
   contact_info: {
     phone: string
     email: string
-  } | string 
+  } | string
   imageUrl?: string
   about_office?: string
   established?: string
@@ -90,6 +90,8 @@ export interface Location {
   map_link?: string
   created_at: Timestamp
   updated_at: Timestamp
+  parent_id?: string
+  sub_offices?: Location[]
 }
 
 // Enhanced caching system
@@ -1054,6 +1056,23 @@ export async function getLocationBySlug(slug: string): Promise<Location | null> 
         ? JSON.parse(data.contact_info) 
         : data.contact_info
     } as Location
+
+    const subOfficesSnapshot = await locationsCol
+      .where("parent_id", "==", location.id)
+      .get()
+    
+    if (!subOfficesSnapshot.empty) {
+      location.sub_offices = subOfficesSnapshot.docs.map(doc => {
+        const subOfficeData = doc.data()
+        return {
+          id: doc.id,
+          ...subOfficeData,
+          contact_info: typeof subOfficeData.contact_info === 'string'
+            ? JSON.parse(subOfficeData.contact_info)
+            : subOfficeData.contact_info
+        } as Location
+      })
+    }
     
     setCache(locationCache, cacheKey, location, LONG_CACHE_TTL)
     console.log(`✅ Cached location: ${location.name}`)

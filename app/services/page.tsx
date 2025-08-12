@@ -333,7 +333,7 @@ export default function ServicesPage() {
                   ✓ 500+ Cases Won
                 </span>
                 <span className="bg-[#4BB4E6] px-4 py-2 rounded-full text-sm font-semibold">
-                  ✓ 15+ Years Experience  
+                  ✓ 75+ Years Experience  
                 </span>
                 <span className="bg-[#4BB4E6] px-4 py-2 rounded-full text-sm font-semibold">
                   ✓ Pan-India Presence

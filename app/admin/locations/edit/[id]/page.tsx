@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/ImageUpload"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Location {
+  id: string
   name: string
   address: string
   city: string
@@ -26,6 +28,7 @@ interface Location {
   office_hours?: {
     weekdays: string
   }
+  parent_id?: string
 }
 
 export default function EditLocationPage() {
@@ -34,6 +37,7 @@ export default function EditLocationPage() {
   const { id } = params
 
   const [location, setLocation] = useState<Location | null>(null)
+  const [locations, setLocations] = useState<Location[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -54,7 +58,20 @@ export default function EditLocationPage() {
           setLoading(false)
         }
       }
+      async function fetchLocations() {
+        try {
+          const response = await fetch("/api/admin/locations", { cache: 'no-store' })
+          if (!response.ok) {
+            throw new Error("Failed to fetch locations")
+          }
+          const data = await response.json()
+          setLocations(data)
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "An unknown error occurred")
+        }
+      }
       fetchLocation()
+      fetchLocations()
     }
   }, [id])
 
@@ -69,7 +86,10 @@ export default function EditLocationPage() {
       const response = await fetch(`/api/admin/locations/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(location),
+        body: JSON.stringify({
+          ...location,
+          parent_id: location.parent_id === "none" ? undefined : location.parent_id,
+        }),
       })
 
       if (!response.ok) {
@@ -166,6 +186,27 @@ export default function EditLocationPage() {
                     required
                   />
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="parent-office">Parent Office</Label>
+                <Select
+                  onValueChange={value => handleBasicChange('parent_id', value)}
+                  value={location.parent_id || "none"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a parent office (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None (Main Office)</SelectItem>
+                    {locations
+                      .filter(loc => loc.id !== location.id) // Prevent selecting itself
+                      .map(loc => (
+                        <SelectItem key={loc.id} value={loc.id}>
+                          {loc.name}
+                        </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

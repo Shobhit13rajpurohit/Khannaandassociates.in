@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/ImageUpload"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface Location {
+  id: string
+  name: string
+}
 
 export default function NewLocationPage() {
   const router = useRouter()
@@ -23,8 +29,26 @@ export default function NewLocationPage() {
   const [established, setEstablished] = useState("")
   const [practiceAreas, setPracticeAreas] = useState("")
   const [weekdayHours, setWeekdayHours] = useState("")
+  const [parentId, setParentId] = useState<string | undefined>(undefined)
+  const [locations, setLocations] = useState<Location[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    async function fetchLocations() {
+      try {
+        const response = await fetch("/api/admin/locations", { cache: 'no-store' })
+        if (!response.ok) {
+          throw new Error("Failed to fetch locations")
+        }
+        const data = await response.json()
+        setLocations(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred")
+      }
+    }
+    fetchLocations()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,7 +77,8 @@ export default function NewLocationPage() {
           practice_areas: practiceAreasArray,
           office_hours: {
             weekdays: weekdayHours
-          }
+          },
+          parent_id: parentId === "none" ? undefined : parentId
         }),
       })
 
@@ -101,6 +126,22 @@ export default function NewLocationPage() {
                     required
                   />
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="parent-office">Parent Office</Label>
+                <Select onValueChange={setParentId} value={parentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a parent office (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None (Main Office)</SelectItem>
+                    {locations.map(location => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

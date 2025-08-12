@@ -146,6 +146,37 @@ export default async function LocationDetailPage({ params }: { params: { locatio
                   )}
                 </div>
               </div>
+
+              {location.sub_offices && location.sub_offices.length > 0 && (
+                <>
+                  <h3 className="text-2xl font-semibold mb-4 text-[#1a3c61]">Our Sub-Offices</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {location.sub_offices.map((subOffice) => (
+                      <Link href={`/locations/${location.slug}/${subOffice.slug}`} key={subOffice.id} className="group">
+                        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                          <div className="relative h-48 w-full">
+                            <Image
+                              src={subOffice.imageUrl || "/placeholder.svg"}
+                              alt={subOffice.name}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#1a3c61]/80 to-transparent"></div>
+                            <div className="absolute bottom-0 left-0 p-4">
+                              <h4 className="text-xl font-semibold text-white">{subOffice.name}</h4>
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <p className="text-gray-700 line-clamp-2">{subOffice.address}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="lg:w-1/3">
