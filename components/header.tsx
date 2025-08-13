@@ -25,11 +25,11 @@ export default function Header() {
     { name: "Banking and Finance & Insurance", description: "Comprehensive banking, finance and insurance law" },
     
     { name: "Capital Markets", description: "Securities law and capital market regulations" },
-    { name: "Competition/Antitrust", description: "Competition law and antitrust compliance" },
+   
     { name: "Corporate and Commercial", description: "Corporate law and commercial transaction services" },
-    { name: "Criminal & Civil", description: "Criminal defense and civil litigation services" },
+    { name: "Criminal and Civil", description: "Criminal defense and civil litigation services" },
     { name: "Energy and Natural Resources", description: "Energy law and natural resources regulation" },
-    { name: "Financial Services & Fintech", description: "Fintech regulation and financial services law" },
+    { name: "Financial Services and Fintech", description: "Fintech regulation and financial services law" },
     { name: "Funds", description: "Investment funds and asset management law" },
     { name: "Healthcare and Life Sciences", description: "Healthcare regulation and life sciences law" },
     { name: "Immigration", description: "Immigration law and visa services" },
@@ -45,30 +45,22 @@ export default function Header() {
     { name: "Technology Media and Telecom", description: "TMT law and telecommunications regulation" }
   ].sort((a, b) => a.name.localeCompare(b.name))
 
-  // Locations list with additional context
-  const locations = [
-    { name: "Ahmedabad", region: "Gujarat" },
+  // Locations divided by Indian and International offices
+  const indianOffices = [
     { name: "Bangalore", region: "Karnataka" },
-    { name: "Bhopal", region: "Madhya Pradesh" },
-    { name: "Chandigarh", region: "Punjab/Haryana" },
-    { name: "Chennai", region: "Tamil Nadu" },
     { name: "Dehradun", region: "Uttarakhand" },
     { name: "Delhi", region: "National Capital Territory" },
-    { name: "Goa", region: "Goa" },
-    { name: "Guwahati", region: "Assam" },
-    { name: "Hyderabad", region: "Telangana" },
-    { name: "Indore", region: "Madhya Pradesh" },
     { name: "Jaipur", region: "Rajasthan" },
-    { name: "Kochi", region: "Kerala" },
-    { name: "Kolkata", region: "West Bengal" },
-    { name: "Lucknow", region: "Uttar Pradesh" },
     { name: "Mumbai", region: "Maharashtra" },
-    { name: "Nagpur", region: "Maharashtra" },
-    { name: "Patna", region: "Bihar" },
-    { name: "Pune", region: "Maharashtra" },
-    { name: "Surat", region: "Gujarat" },
-    { name: "Vadodara", region: "Gujarat" }
   ].sort((a, b) => a.name.localeCompare(b.name))
+
+  const internationalOffices = [
+    { name: "New York", region: "USA" },
+    { name: "London", region: "United Kingdom" },
+  ].sort((a, b) => a.name.localeCompare(b.name))
+
+  // Combined locations for mobile menu
+  const allLocations = [...indianOffices, ...internationalOffices]
 
   // Function to instantly close mega menu
   const closeMegaMenu = useCallback(() => {
@@ -142,7 +134,7 @@ export default function Header() {
 
   const generateSlug = (text: string) => {
     return text.toLowerCase()
-      .replace(/[&]/g, '-')
+      .replace(/[&]/g, 'and')
       .replace(/[()]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/-+/g, '-')
@@ -187,6 +179,7 @@ export default function Header() {
                 aria-expanded={activeDropdown === 'services'}
                 aria-haspopup="true"
                 aria-label="Legal services - view all practice areas"
+                onClick={closeMegaMenu}
               >
                 Services
                 <ChevronDown className={`ml-1 h-4 w-4 transition-transform duration-60 ${activeDropdown === 'services' ? 'rotate-180' : ''}`} />
@@ -204,7 +197,8 @@ export default function Header() {
                 className="text-[#1a3c61] hover:text-[#4BB4E6] font-medium text-base flex items-center transition-colors duration-60"
                 aria-expanded={activeDropdown === 'locations'}
                 aria-haspopup="true"
-                aria-label="Our office locations across India"
+                aria-label="Our office locations across India and internationally"
+                onClick={closeMegaMenu}
               >
                 Locations
                 <ChevronDown className={`ml-1 h-4 w-4 transition-transform duration-60 ${activeDropdown === 'locations' ? 'rotate-180' : ''}`} />
@@ -354,7 +348,7 @@ export default function Header() {
                 </button>
                 {activeDropdown === 'locations' && (
                   <div id="mobile-locations-menu" className="pl-4 mt-2 grid grid-cols-2 gap-1 max-h-60 overflow-y-auto">
-                    {locations.map((location) => (
+                    {allLocations.map((location) => (
                       <Link
                         key={location.name}
                         href={`/locations/${generateSlug(location.name)}`}
@@ -468,7 +462,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* Locations Mega Menu */}
+      {/* Locations Mega Menu - Divided into Indian and International Offices */}
       {activeDropdown === 'locations' && (
         <div 
           className="fixed left-0 right-0 top-[68px] bg-white/65 backdrop-blur-md shadow-2xl border-t border-gray-200 z-50 animate-in fade-in-0 slide-in-from-top-2 duration-200"
@@ -482,25 +476,59 @@ export default function Header() {
           aria-label="Locations menu"
         >
           <div className="container mx-auto px-6 py-8">
-            <div className="mb-6 text-center">
-              <h3 className="text-2xl font-bold text-[#1a3c61] mb-2">Our Offices Across India</h3>
-              <p className="text-gray-600">Serving clients across {locations.length} major cities with local expertise and national reach</p>
+            <div className="mb-8 text-center">
+              <h3 className="text-2xl font-bold text-[#1a3c61] mb-2">Our Global Presence</h3>
+              <p className="text-gray-600">Serving clients across {allLocations.length} major cities with local expertise and global reach</p>
             </div>
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3">
-              {locations.map((location) => (
-                <Link
-                  key={location.name}
-                  href={`/locations/${generateSlug(location.name)}`}
-                  className="group block p-4 text-sm text-[#1a3c61] hover:bg-white/80 hover:text-[#4BB4E6] transition-all duration-200 rounded-lg border border-gray-100 hover:border-[#4BB4E6] hover:shadow-lg text-center backdrop-blur-sm"
-                  role="menuitem"
-                  title={`${location.name} office - ${location.region}`}
-                  onClick={closeMegaMenu}
-                >
-                  <div className="font-semibold group-hover:font-bold transition-all duration-200 mb-2 text-sm">{location.name}</div>
-                  <div className="text-xs text-gray-500 group-hover:text-[#4BB4E6]">{location.region}</div>
-                </Link>
-              ))}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Indian Offices Section */}
+              <div>
+                <div className="mb-4 text-center">
+                  <h4 className="text-xl font-semibold text-[#1a3c61] mb-2">Indian Offices</h4>
+                  
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {indianOffices.map((location) => (
+                    <Link
+                      key={location.name}
+                      href={`/locations/${generateSlug(location.name)}`}
+                      className="group block p-4 text-sm text-[#1a3c61] hover:bg-white/80 hover:text-[#4BB4E6] transition-all duration-200 rounded-lg border border-gray-100 hover:border-[#4BB4E6] hover:shadow-lg text-center backdrop-blur-sm"
+                      role="menuitem"
+                      title={`${location.name} office - ${location.region}`}
+                      onClick={closeMegaMenu}
+                    >
+                      <div className="font-semibold group-hover:font-bold transition-all duration-200 mb-2 text-sm">{location.name}</div>
+                      <div className="text-xs text-gray-500 group-hover:text-[#4BB4E6]">{location.region}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* International Offices Section */}
+              <div>
+                <div className="mb-4 text-center">
+                  <h4 className="text-xl font-semibold text-[#1a3c61] mb-2">International Offices</h4>
+                  
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {internationalOffices.map((location) => (
+                    <Link
+                      key={location.name}
+                      href={`/locations/${generateSlug(location.name)}`}
+                      className="group block p-4 text-sm text-[#1a3c61] hover:bg-white/80 hover:text-[#4BB4E6] transition-all duration-200 rounded-lg border border-gray-100 hover:border-[#4BB4E6] hover:shadow-lg text-center backdrop-blur-sm"
+                      role="menuitem"
+                      title={`${location.name} office - ${location.region}`}
+                      onClick={closeMegaMenu}
+                    >
+                      <div className="font-semibold group-hover:font-bold transition-all duration-200 mb-2 text-sm">{location.name}</div>
+                      <div className="text-xs text-gray-500 group-hover:text-[#4BB4E6]">{location.region}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
+
             <div className="border-t mt-8 pt-6 text-center">
               <Link 
                 href="/locations" 
