@@ -23,7 +23,7 @@ export default function Header() {
     { name: "Arbitration and Reconciliation", description: "Expert dispute resolution and mediation services" },
     { name: "Aviation & Defence", description: "Legal solutions for aviation and defense sectors" },
     { name: "Banking and Finance & Insurance", description: "Comprehensive banking, finance and insurance law" },
-    { name: "Bankruptcy and Insolvency", description: "Insolvency proceedings and bankruptcy law expertise" },
+    
     { name: "Capital Markets", description: "Securities law and capital market regulations" },
     { name: "Competition/Antitrust", description: "Competition law and antitrust compliance" },
     { name: "Corporate and Commercial", description: "Corporate law and commercial transaction services" },
@@ -69,6 +69,14 @@ export default function Header() {
     { name: "Surat", region: "Gujarat" },
     { name: "Vadodara", region: "Gujarat" }
   ].sort((a, b) => a.name.localeCompare(b.name))
+
+  // Function to instantly close mega menu
+  const closeMegaMenu = useCallback(() => {
+    if (dropdownTimerRef.current) {
+      clearTimeout(dropdownTimerRef.current)
+    }
+    setActiveDropdown(null)
+  }, [])
 
   // Improved hover delay for better UX
   const handleMouseEnter = useCallback((dropdown: string) => {
@@ -134,7 +142,7 @@ export default function Header() {
 
   const generateSlug = (text: string) => {
     return text.toLowerCase()
-      .replace(/[&]/g, 'and')
+      .replace(/[&]/g, '-')
       .replace(/[()]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/-+/g, '-')
@@ -411,7 +419,7 @@ export default function Header() {
 
       {/* Backdrop Overlay */}
       {activeDropdown && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={() => setActiveDropdown(null)} />
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={closeMegaMenu} />
       )}
 
       {/* Services Mega Menu */}
@@ -440,6 +448,7 @@ export default function Header() {
                   className="group block p-4 text-sm text-[#1a3c61] hover:bg-white/80 hover:text-[#4BB4E6] transition-all duration-200 rounded-lg border border-gray-100 hover:border-[#4BB4E6] hover:shadow-lg backdrop-blur-sm"
                   role="menuitem"
                   title={service.description}
+                  onClick={closeMegaMenu}
                 >
                   <div className="font-semibold group-hover:font-bold transition-all duration-200 mb-2 text-xs leading-tight">{service.name}</div>
                   <div className="text-xs text-gray-500 group-hover:text-[#4BB4E6] leading-relaxed line-clamp-3">{service.description}</div>
@@ -450,6 +459,7 @@ export default function Header() {
               <Link 
                 href="/services" 
                 className="inline-flex items-center text-lg font-semibold text-[#4BB4E6] hover:text-[#1a3c61] transition-colors duration-200 bg-blue-50/80 backdrop-blur-sm px-6 py-3 rounded-lg hover:bg-blue-100/80"
+                onClick={closeMegaMenu}
               >
                 View All Services →
               </Link>
@@ -484,6 +494,7 @@ export default function Header() {
                   className="group block p-4 text-sm text-[#1a3c61] hover:bg-white/80 hover:text-[#4BB4E6] transition-all duration-200 rounded-lg border border-gray-100 hover:border-[#4BB4E6] hover:shadow-lg text-center backdrop-blur-sm"
                   role="menuitem"
                   title={`${location.name} office - ${location.region}`}
+                  onClick={closeMegaMenu}
                 >
                   <div className="font-semibold group-hover:font-bold transition-all duration-200 mb-2 text-sm">{location.name}</div>
                   <div className="text-xs text-gray-500 group-hover:text-[#4BB4E6]">{location.region}</div>
@@ -494,6 +505,7 @@ export default function Header() {
               <Link 
                 href="/locations" 
                 className="inline-flex items-center text-lg font-semibold text-[#4BB4E6] hover:text-[#1a3c61] transition-colors duration-200 bg-blue-50/80 backdrop-blur-sm px-6 py-3 rounded-lg hover:bg-blue-100/80"
+                onClick={closeMegaMenu}
               >
                 View All Locations →
               </Link>
